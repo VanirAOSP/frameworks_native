@@ -27,12 +27,18 @@
 
 #include <private/pixelflinger/ggl_context.h>
 #include <hardware/gralloc.h>
+#ifdef LIBAGL_USE_GRALLOC_COPYBITS
+#include <display/copybit.h>
+#endif
 
 #include <GLES/gl.h>
 #include <GLES/glext.h>
 
-namespace android {
+#ifdef LIBAGL_USE_GRALLOC_COPYBITS
+struct ANativeWindowBuffer;
+#endif
 
+namespace android {
 
 const unsigned int OGLES_NUM_COMPRESSED_TEXTURE_FORMATS = 10
 #ifdef GL_OES_compressed_ETC1_RGB8_texture
@@ -601,6 +607,16 @@ struct prims_t {
     void (*renderTriangle)(GL, vertex_t*, vertex_t*, vertex_t*);
 };
 
+#ifdef LIBAGL_USE_GRALLOC_COPYBITS
+struct copybits_context_t {
+    // A handle to the blit engine, if it exists, else NULL.
+    copybit_device_t*       blitEngine;
+    int32_t                 minScale;
+    int32_t                 maxScale;
+    ANativeWindowBuffer*    drawSurfaceBuffer;
+};
+#endif
+
 struct ogles_context_t {
     context_t               rasterizer;
     array_machine_t         arrays         __attribute__((aligned(32)));
@@ -625,6 +641,14 @@ struct ogles_context_t {
     EGLSurfaceManager*      surfaceManager;
     EGLBufferObjectManager* bufferObjectManager;
 
+#ifdef LIBAGL_USE_GRALLOC_COPYBITS 
+    // copybits is only used if LIBAGL_USE_GRALLOC_COPYBITS is
+    // defined, but it is always present because ogles_context_t is a public
+    // struct that is used by clients of libagl. We want the size and offsets
+    // to stay the same, whether or not LIBAGL_USE_GRALLOC_COPYBITS is defined.
+    copybits_context_t      copybits;
+#endif
+
     GLenum                  error;
 
     static inline ogles_context_t* get() {
@@ -639,4 +663,3 @@ struct ogles_context_t {
 using namespace android::gl;
 
 #endif // ANDROID_OPENGLES_CONTEXT_H
-

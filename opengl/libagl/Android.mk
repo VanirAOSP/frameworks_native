@@ -41,8 +41,15 @@ ifeq ($(TARGET_ARCH),mips)
     LOCAL_CFLAGS += -mno-check-zero-division
 endif
 
+ifneq ($(TARGET_LIBAGL_USE_GRALLOC_COPYBITS),)
+    LOCAL_CFLAGS += -DLIBAGL_USE_GRALLOC_COPYBITS
+    LOCAL_SRC_FILES += copybit.cpp
+    LOCAL_SHARED_LIBRARIES += libui
+endif
+
 # we need to access the private Bionic header <bionic_tls.h>
 LOCAL_C_INCLUDES += bionic/libc/private
+LOCAL_C_INCLUDES += $(TARGET_OUT_INTERMEDIATES)/include/qcom
 
 LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/egl
 LOCAL_MODULE:= libGLES_android

@@ -1067,7 +1067,7 @@ status_t BufferQueue::setDefaultBufferSize(uint32_t w, uint32_t h)
     if (!w || !h) {
         ST_LOGE("setDefaultBufferSize: dimensions cannot be 0 (w=%d, h=%d)",
                 w, h);
-        return BAD_VALUE;
+        return NO_ERROR;
     }
 
     Mutex::Autolock lock(mMutex);
