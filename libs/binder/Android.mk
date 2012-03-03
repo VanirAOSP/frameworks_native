@@ -29,6 +29,10 @@ sources := \
     ProcessState.cpp \
     Static.cpp
 
+ifeq ($(TARGET_USES_ION),true)
+    sources += MemoryHeapIon.cpp
+endif
+
 LOCAL_PATH:= $(call my-dir)
 
 include $(CLEAR_VARS)
