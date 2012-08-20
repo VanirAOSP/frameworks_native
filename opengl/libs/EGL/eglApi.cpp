@@ -70,10 +70,12 @@ static const extention_map_t sExtentionMap[] = {
             (__eglMustCastToProperFunctionPointerType)&eglCreateImageKHR },
     { "eglDestroyImageKHR",
             (__eglMustCastToProperFunctionPointerType)&eglDestroyImageKHR },
+#ifndef TARGET_BOARD_SNOWBALL
     { "eglGetSystemTimeFrequencyNV",
             (__eglMustCastToProperFunctionPointerType)&eglGetSystemTimeFrequencyNV },
     { "eglGetSystemTimeNV",
-            (__eglMustCastToProperFunctionPointerType)&eglGetSystemTimeNV },
+    (__eglMustCastToProperFunctionPointerType)&eglGetSystemTimeNV },
+#endif
 };
 
 // accesses protected by sExtensionMapMutex
@@ -1284,6 +1286,7 @@ EGLint eglWaitSyncANDROID(EGLDisplay dpy, EGLSyncKHR sync, EGLint flags)
 // ----------------------------------------------------------------------------
 // NVIDIA extensions
 // ----------------------------------------------------------------------------
+#ifndef TARGET_BOARD_SNOWBALL
 EGLuint64NV eglGetSystemTimeFrequencyNV()
 {
     clearError();
@@ -1319,3 +1322,4 @@ EGLuint64NV eglGetSystemTimeNV()
 
     return setErrorQuiet(EGL_BAD_DISPLAY, 0);
 }
+#endif
