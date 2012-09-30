@@ -20,7 +20,11 @@
 PRODUCT_PROPERTY_OVERRIDES += \
     dalvik.vm.heapstartsize=8m \
     dalvik.vm.heapgrowthlimit=192m \
+<<<<<<< HEAD
     dalvik.vm.heapsize=512m \
+=======
+    dalvik.vm.heapsize=768m \
+>>>>>>> c84e984... Fix issue #7257947: Need to fix heap limits on Mako
     dalvik.vm.heaptargetutilization=0.75 \
     dalvik.vm.heapminfree=512k \
     dalvik.vm.heapmaxfree=8m
