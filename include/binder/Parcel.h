@@ -98,7 +98,7 @@ public:
     status_t            writeCString(const char* str);
     status_t            writeString8(const String8& str);
     status_t            writeString16(const String16& str);
-    status_t            writeString16(const char16_t* str, size_t len);
+    status_t            writeString16(const uint16_t* str, size_t len);
     status_t            writeStrongBinder(const sp<IBinder>& val);
     status_t            writeWeakBinder(const wp<IBinder>& val);
 
