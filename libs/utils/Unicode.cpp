@@ -362,17 +362,17 @@ void utf16_to_utf8(const char16_t* src, size_t src_len, char* dst)
 
 ssize_t utf8_length(const char *src)
 {
-    const char *cur = src;
+    const uint8_t *cur = reinterpret_cast<const uint8_t*>(src);
     size_t ret = 0;
     while (*cur != '\0') {
-        const char first_char = *cur++;
-        if ((first_char & 0x80) == 0) { // ASCII
+        const uint8_t first_byte = *cur++;
+        if ((first_byte & 0x80) == 0) { // ASCII
             ret += 1;
             continue;
         }
         // (UTF-8's character must not be like 10xxxxxx,
         //  but 110xxxxx, 1110xxxx, ... or 1111110x)
-        if ((first_char & 0x40) == 0) {
+        if ((first_byte & 0x40) == 0) {
             return -1;
         }
 
@@ -380,7 +380,7 @@ ssize_t utf8_length(const char *src)
         size_t num_to_read = 0;
         char32_t utf32 = 0;
         for (num_to_read = 1, mask = 0x40, to_ignore_mask = 0x80;
-             num_to_read < 5 && (first_char & mask);
+             num_to_read < 5 && (first_byte & mask);
              num_to_read++, to_ignore_mask |= mask, mask >>= 1) {
             if ((*cur & 0xC0) != 0x80) { // must be 10xxxxxx
                 return -1;
@@ -393,7 +393,7 @@ ssize_t utf8_length(const char *src)
             return -1;
         }
         to_ignore_mask |= mask;
-        utf32 |= ((~to_ignore_mask) & first_char) << (6 * (num_to_read - 1));
+        utf32 |= ((~to_ignore_mask) & first_byte ) << (6 * (num_to_read - 1));
         if (utf32 > kUnicodeMaxCodepoint) {
             return -1;
         }
