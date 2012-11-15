@@ -46,6 +46,9 @@ ifeq ($(BOARD_HAVE_HDMI_SUPPORT),SAMSUNG_HDMI_SUPPORT)
 	LOCAL_CFLAGS += -DSAMSUNG_HDMI_SUPPORT
 endif
 
+# HWComposer.cpp contains 2 pretty bad aliasing violations
+LOCAL_CFLAGS += -fno-strict-aliasing
+
 LOCAL_SHARED_LIBRARIES := \
 	libcutils \
 	libdl \
