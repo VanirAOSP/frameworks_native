@@ -139,15 +139,15 @@ void do_showmap(int pid, const char *name) {
 
     sprintf(title, "SHOW MAP %d (%s)", pid, name);
     sprintf(arg, "%d", pid);
- 
+
     if (skip) {
         /* Skip due to non-zero exit status on first run. */
         printf("------ %s: Skipped. ------\n", title);
     } else {
-    int status = run_command(title, 10, SU_PATH, "root", "showmap", arg, NULL);
+        int status = run_command(title, 10, SU_PATH, "root", "showmap", arg, NULL);
         if (!ran) {
             ran  = true;
-           skip = !WIFEXITED(status) || WEXITSTATUS(status) != 0;
+            skip = !WIFEXITED(status) || WEXITSTATUS(status) != 0;
         }
     }
 }
@@ -207,30 +207,31 @@ int run_command(const char *title, int timeout_seconds, const char *command, ...
 
     /* handle child case */
     if (pid == 0) {
-    const char *args[1024] = {command};
-    size_t arg = 1;
-    char sucmd[255];
-    bool su = false;
-    if (strcmp(command, SU_PATH) == 0) {
+        const char *args[1024] = {command};
+        size_t arg = 1;
+        char sucmd[255];
+        bool su = false;
+
+        if (strcmp(command, SU_PATH) == 0) {
             /* Need to transform calls to su from:
              *   su LOGIN COMMAND ...
              * to:
              *   su -c 'COMMAND "$@"' -- LOGIN COMMAND ... */
-           args[arg++] = "-c";
-           args[arg++] = sucmd;
+            args[arg++] = "-c";
+            args[arg++] = sucmd;
             args[arg++] = "--";
             sucmd[0] = '\0';
-           su = true;
-       }
+            su = true;
+        }
 
         va_list ap;
         va_start(ap, command);
         if (title) printf("------ %s (%s", title, command);
         for (; arg < sizeof(args) / sizeof(args[0]); ++arg) {
             args[arg] = va_arg(ap, const char *);
-    if (args[arg] == NULL) break;
-    if (su && arg == 5) snprintf(sucmd, sizeof(sucmd), "%s \"$@\"", args[arg]);
-    if (title) printf(" %s", args[arg]);
+            if (args[arg] == NULL) break;
+            if (su && arg == 5) snprintf(sucmd, sizeof(sucmd), "%s \"$@\"", args[arg]);
+            if (title) printf(" %s", args[arg]);
         }
         if (title) printf(") ------\n");
         fflush(stdout);

@@ -68,6 +68,9 @@
 #include "DisplayHardware/GraphicBufferAlloc.h"
 #include "DisplayHardware/HWComposer.h"
 
+#ifdef SAMSUNG_HDMI_SUPPORT
+#include "SecTVOutService.h"
+#endif
 
 // true : HDMI cable is pluged in, false: HDMI cable is plugged out
 bool    mHdmiCableInserted;
@@ -143,6 +146,16 @@ SurfaceFlinger::SurfaceFlinger()
     }
     ALOGI_IF(mDebugRegion, "showupdates enabled");
     ALOGI_IF(mDebugDDMS, "DDMS debugging enabled");
+
+#ifdef SAMSUNG_HDMI_SUPPORT
+    ALOGD(">>> Run service");
+    android::SecTVOutService::instantiate();
+#if defined(SAMSUNG_EXYNOS5250)
+    mHdmiClient = SecHdmiClient::getInstance();
+    mHdmiClient->setHdmiEnable(1);
+#endif
+#endif
+
 }
 
 void SurfaceFlinger::onFirstRef()
@@ -150,7 +163,6 @@ void SurfaceFlinger::onFirstRef()
     mEventQueue.init(this);
 
     run("SurfaceFlinger", PRIORITY_URGENT_DISPLAY);
-
     // Wait for the main thread to be done with its initialization
     mReadyToRunBarrier.wait();
 }
