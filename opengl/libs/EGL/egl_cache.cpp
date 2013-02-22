@@ -30,11 +30,11 @@
 #endif
 
 #ifndef MAX_EGL_CACHE_KEY_SIZE
-#define MAX_EGL_CACHE_KEY_SIZE (1024);
+#define MAX_EGL_CACHE_KEY_SIZE (4094);
 #endif
 
 #ifndef MAX_EGL_CACHE_SIZE
-#define MAX_EGL_CACHE_SIZE (64 * 1024);
+#define MAX_EGL_CACHE_SIZE (2048 * 1024);
 #endif
 
 // Cache size limits.
