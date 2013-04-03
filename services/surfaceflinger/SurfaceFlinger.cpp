@@ -72,7 +72,7 @@
 #include "SecTVOutService.h"
 #endif
 
-// true : HDMI cable is pluged in, false: HDMI cable is plugged out
+// true : HDMI cable is pluged in, false: HDMI cable is unplugged
 bool    mHdmiCableInserted;
 
 #ifdef SAMSUNG_HDMI_SUPPORT
