@@ -53,9 +53,7 @@ static char const * const sExtensionString  =
         "EGL_KHR_gl_renderbuffer_image "
         "EGL_KHR_fence_sync "
         "EGL_EXT_create_context_robustness "
-#ifndef TARGET_BOARD_SNOWBALL
         "EGL_NV_system_time "
-#endif
         "EGL_ANDROID_image_native_buffer "      // mandatory
         ;
 
