@@ -66,10 +66,10 @@ EGL_ENTRY(EGLint, eglDupNativeFenceFDANDROID, EGLDisplay, EGLSyncKHR)
 EGL_ENTRY(EGLint, eglWaitSyncANDROID, EGLDisplay, EGLSyncKHR, EGLint)
 
 /* NVIDIA extensions */
-
+#ifndef TARGET_BOARD_SNOWBALL
 EGL_ENTRY(EGLuint64NV, eglGetSystemTimeFrequencyNV, void)
 EGL_ENTRY(EGLuint64NV, eglGetSystemTimeNV, void)
-
+#endif
 /* IMG extensions */
 
 EGL_ENTRY(EGLBoolean, eglHibernateProcessIMG, void)

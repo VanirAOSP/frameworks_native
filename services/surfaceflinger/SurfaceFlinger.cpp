@@ -72,11 +72,33 @@
 #include "SecTVOutService.h"
 #endif
 
+// true : HDMI cable is pluged in, false: HDMI cable is unplugged
+bool    mHdmiCableInserted;
+
+#ifdef SAMSUNG_HDMI_SUPPORT
+#include "SecHdmi.h"
+#endif
+
 #define EGL_VERSION_HW_ANDROID  0x3143
 
 #define DISPLAY_COUNT       1
 
 namespace android {
+
+#ifdef SAMSUNG_HDMI_SUPPORT
+extern "C" {
+
+extern bool blit2Hdmi();
+extern int SecHdmi_flush();
+extern int SecHdmi_connect(void);
+extern int SecHdmi_disconnect(void);
+extern int SecHdmi_destroy(void);
+extern void SecHdmi();
+extern int SecHdmi_create(void);
+extern void setHdmiStatus(uint32_t status);
+}
+#endif
+
 // ---------------------------------------------------------------------------
 
 const String16 sHardwareTest("android.permission.HARDWARE_TEST");
@@ -541,6 +563,17 @@ status_t SurfaceFlinger::readyToRun()
     //  initialize OpenGL ES
     DisplayDevice::makeCurrent(mEGLDisplay, hw, mEGLContext);
     initializeGL(mEGLDisplay);
+
+#ifdef SAMSUNG_HDMI_SUPPORT
+    SecHdmi();
+    if(SecHdmi_create() == 0)
+      ALOGE("%s::mSecHdmi.create() fail \n", __func__);
+    else
+    {
+     // for it to connect
+     setHdmiStatus(1);
+    }
+#endif
 
     // start the EventThread
     mEventThread = new EventThread(this);
@@ -1072,6 +1105,13 @@ void SurfaceFlinger::postFramebuffer()
 
     mLastSwapBufferTime = systemTime() - now;
     mDebugInSwapBuffers = 0;
+
+#ifdef SAMSUNG_HDMI_SUPPORT
+    if(mHdmiCableInserted == true)
+    {
+      blit2Hdmi();
+    }
+#endif
 }
 
 void SurfaceFlinger::handleTransaction(uint32_t transactionFlags)
@@ -1214,7 +1254,22 @@ void SurfaceFlinger::handleTransactionLocked(uint32_t transactionFlags)
                                         fbs->getBufferQueue()));
                     } else {
                         if (state.surface != NULL) {
-                            stc = new SurfaceTextureClient(state.surface);
+#ifdef QCOM_HARDWARE
+                            // to check whether virtual display is requested by
+                            // WifiDisplayAdapter
+                            char value[PROPERTY_VALUE_MAX];
+                            property_get("persist.sys.wfd.virtual", value, "0");
+                            int wfdVirtual = atoi(value);
+                            if(wfdVirtual) {
+                                // for supported (by hwc) displays we provide
+                                // our own rendering surface
+                                fbs = new FramebufferSurface(*mHwc, state.type);
+                                stc = new SurfaceTextureClient(
+                                        static_cast< sp<ISurfaceTexture> >(
+                                            fbs->getBufferQueue()));
+                            } else
+#endif
+                                stc = new SurfaceTextureClient(state.surface);
                         }
                         isSecure = state.isSecure;
                     }
@@ -1636,6 +1691,9 @@ void SurfaceFlinger::doComposeSurfaces(const sp<const DisplayDevice>& hw, const 
                         layer->draw(hw, clip);
                         break;
                     }
+                    case HWC_BLIT:
+                        //Do nothing
+                        break;
                     case HWC_FRAMEBUFFER_TARGET: {
                         // this should not happen as the iterator shouldn't
                         // let us get there.
@@ -1936,11 +1994,73 @@ uint32_t SurfaceFlinger::setClientStateLocked(
     return flags;
 }
 
+#ifdef SAMSUNG_HDMI_SUPPORT
+void setHdmiStatus(uint32_t status)
+{
+
+        bool hdmiCableInserted = (bool)status;
+
+        if(mHdmiCableInserted == hdmiCableInserted)
+            return;
+
+        if(hdmiCableInserted == true)
+        {
+            if(SecHdmi_connect() == 0)
+            {
+                hdmiCableInserted = false;
+            }
+        }
+        else
+        {
+            if(SecHdmi_disconnect() == 0)
+            {
+                ALOGE("%s::mSecHdmi.disconnect() fail\n", __func__);
+            }
+        }
+
+        mHdmiCableInserted = hdmiCableInserted;
+
+    if(mHdmiCableInserted == true)
+    {
+        blit2Hdmi();
+    }
+}
+
+void setHdmiMode(uint32_t mode)
+{
+}
+
+void setHdmiResolution(uint32_t resolution)
+{
+}
+
+void setHdmiHdcp(uint32_t hdcp_en)
+{
+}
+
+bool blit2Hdmi(void)
+{
+    if(mHdmiCableInserted == false)
+    {
+        ALOGE("mHdmiCableInserted == false fail");
+        return false;
+    }
+
+    if(SecHdmi_flush() == false)
+    {
+        ALOGE("%s::mSecHdmi.flush() fail\n", __func__);
+    }
+
+    return true;
+}
+
+#endif
+
 sp<ISurface> SurfaceFlinger::createLayer(
         ISurfaceComposerClient::surface_data_t* params,
         const String8& name,
         const sp<Client>& client,
-       uint32_t w, uint32_t h, PixelFormat format,
+        uint32_t w, uint32_t h, PixelFormat format,
         uint32_t flags)
 {
     sp<LayerBaseClient> layer;

@@ -70,10 +70,12 @@ static const extention_map_t sExtentionMap[] = {
             (__eglMustCastToProperFunctionPointerType)&eglCreateImageKHR },
     { "eglDestroyImageKHR",
             (__eglMustCastToProperFunctionPointerType)&eglDestroyImageKHR },
+#ifndef TARGET_BOARD_SNOWBALL
     { "eglGetSystemTimeFrequencyNV",
             (__eglMustCastToProperFunctionPointerType)&eglGetSystemTimeFrequencyNV },
     { "eglGetSystemTimeNV",
-            (__eglMustCastToProperFunctionPointerType)&eglGetSystemTimeNV },
+    (__eglMustCastToProperFunctionPointerType)&eglGetSystemTimeNV },
+#endif
 };
 
 // accesses protected by sExtensionMapMutex
@@ -760,8 +762,8 @@ __eglMustCastToProperFunctionPointerType eglGetProcAddress(const char *procname)
 
             egl_connection_t* const cnx = &gEGLImpl;
             if (cnx->dso && cnx->egl.eglGetProcAddress) {
-                found = true;
                 // Extensions are independent of the bound context
+                addr =
                 cnx->hooks[egl_connection_t::GLESv1_INDEX]->ext.extensions[slot] =
                 cnx->hooks[egl_connection_t::GLESv2_INDEX]->ext.extensions[slot] =
 #if EGL_TRACE
@@ -769,10 +771,13 @@ __eglMustCastToProperFunctionPointerType eglGetProcAddress(const char *procname)
                 gHooksTrace.ext.extensions[slot] =
 #endif
                         cnx->egl.eglGetProcAddress(procname);
+                if (addr) found = true;
             }
 
             if (found) {
+#if USE_FAST_TLS_KEY
                 addr = gExtensionForwarders[slot];
+#endif
                 sGLExtentionMap.add(name, addr);
                 sGLExtentionSlot++;
             }
@@ -1284,6 +1289,7 @@ EGLint eglWaitSyncANDROID(EGLDisplay dpy, EGLSyncKHR sync, EGLint flags)
 // ----------------------------------------------------------------------------
 // NVIDIA extensions
 // ----------------------------------------------------------------------------
+#ifndef TARGET_BOARD_SNOWBALL
 EGLuint64NV eglGetSystemTimeFrequencyNV()
 {
     clearError();
@@ -1319,3 +1325,4 @@ EGLuint64NV eglGetSystemTimeNV()
 
     return setErrorQuiet(EGL_BAD_DISPLAY, 0);
 }
+#endif

@@ -37,32 +37,72 @@ namespace android {
 
 #if USE_FAST_TLS_KEY
 
-    #ifdef HAVE_ARM_TLS_REGISTER
-        #define GET_TLS(reg) \
-            "mrc p15, 0, " #reg ", c13, c0, 3 \n"
+    #if defined(__i386__)
+        /* Tell gcc 4.4+ to always omit the frame pointer to have working code
+         * independ of compiler flag
+         */
+        #define API_ENTRY(_api) __attribute__((noinline))            \
+                __attribute__((optimize("omit-frame-pointer")))      \
+                _api
+
+        /* pop %%ebp only because x86 doesn't support naked functions */
+        /* 4.4+ supports __attribute__((optimize)) that disable function
+         * prologues
+         */
+        #if __GNUC__ < 4 || \
+        (__GNUC__ == 4 && __GNUC_MINOR__ < 4 )
+             #define PROLOGUE  "pop %%ebp   \n"
+        #else
+             #define PROLOGUE  ""
+        #endif
+
+        #define CALL_GL_EXTENSION_API(_api)                         \
+            asm volatile(                                           \
+                PROLOGUE                                            \
+                "movl %%gs:0, %%ecx         \n"                     \
+                "movl %c[tls](%%ecx), %%eax \n"                     \
+                "test %%eax, %%eax          \n"                     \
+                "je out" #_api "            \n"                     \
+                "movl %c[api](%%eax), %%ecx \n"                     \
+                "test %%ecx, %%ecx          \n"                     \
+                "je out" #_api "            \n"                     \
+                "jmp *%%ecx                 \n"                     \
+                "out" #_api ": ret          \n"                     \
+                :                                                   \
+                : [tls] "i"(TLS_SLOT_OPENGL_API*4),                 \
+                  [api] "i"(__builtin_offsetof(gl_hooks_t,          \
+                                          ext.extensions[_api]))    \
+                :                                                   \
+                );
     #else
-        #define GET_TLS(reg) \
-            "mov   " #reg ", #0xFFFF0FFF      \n"  \
-            "ldr   " #reg ", [" #reg ", #-15] \n"
+        #ifdef HAVE_ARM_TLS_REGISTER
+            #define GET_TLS(reg) \
+                "mrc p15, 0, " #reg ", c13, c0, 3 \n"
+        #else
+            #define GET_TLS(reg) \
+                "mov   " #reg ", #0xFFFF0FFF      \n"  \
+                "ldr   " #reg ", [" #reg ", #-15] \n"
+        #endif
+
+
+        #define API_ENTRY(_api) __attribute__((naked)) _api
+
+        #define CALL_GL_EXTENSION_API(_api)                         \
+             asm volatile(                                          \
+                GET_TLS(r12)                                        \
+                "ldr   r12, [r12, %[tls]] \n"                       \
+                "cmp   r12, #0            \n"                       \
+                "ldrne r12, [r12, %[api]] \n"                       \
+                "cmpne r12, #0            \n"                       \
+                "bxne  r12                \n"                       \
+                "bx    lr                 \n"                       \
+                :                                                   \
+                : [tls] "J"(TLS_SLOT_OPENGL_API*4),                 \
+                  [api] "J"(__builtin_offsetof(gl_hooks_t,          \
+                                          ext.extensions[_api]))    \
+                :                                                   \
+                );
     #endif
-
-    #define API_ENTRY(_api) __attribute__((naked)) _api
-
-    #define CALL_GL_EXTENSION_API(_api)                         \
-         asm volatile(                                          \
-            GET_TLS(r12)                                        \
-            "ldr   r12, [r12, %[tls]] \n"                       \
-            "cmp   r12, #0            \n"                       \
-            "ldrne r12, [r12, %[api]] \n"                       \
-            "cmpne r12, #0            \n"                       \
-            "bxne  r12                \n"                       \
-            "bx    lr                 \n"                       \
-            :                                                   \
-            : [tls] "J"(TLS_SLOT_OPENGL_API*4),                 \
-              [api] "J"(__builtin_offsetof(gl_hooks_t,          \
-                                      ext.extensions[_api]))    \
-            :                                                   \
-            );
 
     #define GL_EXTENSION_NAME(_n)   __glExtFwd##_n
 

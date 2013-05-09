@@ -228,21 +228,17 @@ status_t GraphicBufferAllocator::alloc(uint32_t w, uint32_t h,
     BufferLiberatorThread::maybeWaitForLiberation();
 
 #ifdef QCOM_BSP
-    err = mAllocDev->allocSize(mAllocDev, w, h,
+    if (bufferSize)
+        err = mAllocDev->allocSize(mAllocDev, w, h,
                                format, usage, handle, stride, bufferSize);
-#else
-    err = mAllocDev->alloc(mAllocDev, w, h, format, usage, handle, stride);
+    else
 #endif
+        err = mAllocDev->alloc(mAllocDev, w, h, format, usage, handle, stride);
 
     if (err != NO_ERROR) {
         ALOGW("WOW! gralloc alloc failed, waiting for pending frees!");
         BufferLiberatorThread::waitForLiberation();
-#ifdef QCOM_BSP
-        err = mAllocDev->allocSize(mAllocDev, w, h,
-                               format, usage, handle, stride, bufferSize);
-#else
         err = mAllocDev->alloc(mAllocDev, w, h, format, usage, handle, stride);
-#endif
     }
 
 #ifdef QCOM_BSP
