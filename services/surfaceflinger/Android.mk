@@ -23,9 +23,6 @@ LOCAL_SRC_FILES:= \
 LOCAL_CFLAGS:= -DLOG_TAG=\"SurfaceFlinger\"
 LOCAL_CFLAGS += -DGL_GLEXT_PROTOTYPES -DEGL_EGLEXT_PROTOTYPES
 
-ifeq ($(TARGET_BOARD_PLATFORM),omap3)
-	LOCAL_CFLAGS += -DNO_RGBX_8888
-endif
 ifeq ($(TARGET_BOARD_PLATFORM),omap4)
 	LOCAL_CFLAGS += -DHAS_CONTEXT_PRIORITY
 endif
@@ -38,12 +35,12 @@ ifeq ($(TARGET_DISABLE_TRIPLE_BUFFERING),true)
 	LOCAL_CFLAGS += -DTARGET_DISABLE_TRIPLE_BUFFERING
 endif
 
-ifneq ($(NUM_FRAMEBUFFER_SURFACE_BUFFERS),)
-  LOCAL_CFLAGS += -DNUM_FRAMEBUFFER_SURFACE_BUFFERS=$(NUM_FRAMEBUFFER_SURFACE_BUFFERS)
+ifeq ($(BOARD_EGL_NEEDS_LEGACY_FB),true)
+	LOCAL_CFLAGS += -DBOARD_EGL_NEEDS_LEGACY_FB
 endif
 
-ifeq ($(BOARD_HAVE_HDMI_SUPPORT),SAMSUNG_HDMI_SUPPORT)
-	LOCAL_CFLAGS += -DSAMSUNG_HDMI_SUPPORT
+ifneq ($(NUM_FRAMEBUFFER_SURFACE_BUFFERS),)
+  LOCAL_CFLAGS += -DNUM_FRAMEBUFFER_SURFACE_BUFFERS=$(NUM_FRAMEBUFFER_SURFACE_BUFFERS)
 endif
 
 # HWComposer.cpp contains 2 pretty bad aliasing violations
@@ -60,10 +57,11 @@ LOCAL_SHARED_LIBRARIES := \
 	libui \
 	libgui
 
-ifeq ($(BOARD_HAVE_HDMI_SUPPORT),SAMSUNG_HDMI_SUPPORT)
-        LOCAL_C_INCLUDES += vendor/samsung/origen_quad/proprietary/include
-        LOCAL_LDFLAGS += vendor/samsung/origen_quad/proprietary/system/lib/libfimc.so
-        LOCAL_LDFLAGS += vendor/samsung/origen_quad/proprietary/system/lib/libhdmi.so
+ifeq ($(BOARD_USES_SAMSUNG_HDMI),true)
+        LOCAL_CFLAGS += -DSAMSUNG_HDMI_SUPPORT
+        LOCAL_SHARED_LIBRARIES += libTVOut libhdmiclient
+        LOCAL_C_INCLUDES += hardware/samsung/$(TARGET_BOARD_PLATFORM)/libhdmi/libhdmiservice
+        LOCAL_C_INCLUDES += hardware/samsung/$(TARGET_BOARD_PLATFORM)/include
 endif
 
 

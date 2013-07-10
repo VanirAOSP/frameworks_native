@@ -173,8 +173,8 @@ class ScreenshotClient
     PixelFormat mFormat;
 public:
     ScreenshotClient();
-	
-	 // TODO: Remove me.  Do not use.
+
+    // TODO: Remove me.  Do not use.
     // This is a compatibility shim for one product whose drivers are depending on
     // this legacy function (when they shouldn't).
     status_t update();
