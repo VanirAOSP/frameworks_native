@@ -20,6 +20,7 @@
 #include <sys/types.h>
 
 #include <cutils/compiler.h>
+#include <cutils/properties.h>
 
 #include <gui/BitTube.h>
 #include <gui/IDisplayEventConnection.h>
@@ -40,6 +41,11 @@ EventThread::EventThread(const sp<SurfaceFlinger>& flinger)
     : mFlinger(flinger),
       mUseSoftwareVSync(false),
       mDebugVsyncEnabled(false) {
+
+    char value[PROPERTY_VALUE_MAX];
+    property_get("debug.sf.no_hw_vsync", value, "0");
+    if (1 == atoi(value))
+        mUseSoftwareVSync = true;
 
     for (int32_t i=0 ; i<HWC_NUM_DISPLAY_TYPES ; i++) {
         mVSyncEvent[i].header.type = DisplayEventReceiver::DISPLAY_EVENT_VSYNC;
@@ -108,6 +114,11 @@ void EventThread::onScreenAcquired() {
         mUseSoftwareVSync = false;
         mCondition.broadcast();
     }
+
+    char value[PROPERTY_VALUE_MAX];
+    property_get("debug.sf.no_hw_vsync", value, "0");
+    if (1 == atoi(value))
+        mUseSoftwareVSync = true;
 }
 
 
