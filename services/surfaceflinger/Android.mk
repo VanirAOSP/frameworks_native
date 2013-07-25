@@ -81,6 +81,9 @@ endif
 
 LOCAL_CFLAGS += -fvisibility=hidden
 
+# HWComposer.cpp contains 2 pretty bad aliasing violations
+LOCAL_CFLAGS += -fno-strict-aliasing
+
 LOCAL_SHARED_LIBRARIES := \
 	libcutils \
 	liblog \
