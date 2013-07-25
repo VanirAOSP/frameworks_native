@@ -121,9 +121,6 @@ static const bool runningWithoutSyncFramework = false;
 // conservatively (or at least with awareness of the trade-off being made).
 static const int64_t vsyncPhaseOffsetNs = VSYNC_EVENT_PHASE_OFFSET_NS;
 
-// This is the phase offset at which SurfaceFlinger's composition runs.
-static const int64_t sfVsyncPhaseOffsetNs = SF_VSYNC_EVENT_PHASE_OFFSET_NS;
-
 // ---------------------------------------------------------------------------
 
 const String16 sHardwareTest("android.permission.HARDWARE_TEST");
@@ -456,11 +453,7 @@ status_t SurfaceFlinger::selectEGLConfig(EGLDisplay display, EGLint nativeVisual
 
 class DispSyncSource : public VSyncSource, private DispSync::Callback {
 public:
-    DispSyncSource(DispSync* dispSync, nsecs_t phaseOffset, bool traceVsync) :
-            mValue(0),
-            mPhaseOffset(phaseOffset),
-            mTraceVsync(traceVsync),
-            mDispSync(dispSync) {}
+    DispSyncSource(DispSync* dispSync) : mValue(0), mDispSync(dispSync) {}
 
     virtual ~DispSyncSource() {}
 
@@ -468,7 +461,7 @@ public:
         // Do NOT lock the mutex here so as to avoid any mutex ordering issues
         // with locking it in the onDispSyncEvent callback.
         if (enable) {
-            status_t err = mDispSync->addEventListener(mPhaseOffset,
+            status_t err = mDispSync->addEventListener(vsyncPhaseOffsetNs,
                     static_cast<DispSync::Callback*>(this));
             if (err != NO_ERROR) {
                 ALOGE("error registering vsync callback: %s (%d)",
@@ -498,10 +491,8 @@ private:
             Mutex::Autolock lock(mMutex);
             callback = mCallback;
 
-            if (mTraceVsync) {
-                mValue = (mValue + 1) % 2;
-                ATRACE_INT("VSYNC", mValue);
-            }
+            mValue = (mValue + 1) % 2;
+            ATRACE_INT("VSYNC", mValue);
         }
 
         if (callback != NULL) {
@@ -510,9 +501,6 @@ private:
     }
 
     int mValue;
-
-    const nsecs_t mPhaseOffset;
-    const bool mTraceVsync;
 
     DispSync* mDispSync;
     sp<VSyncSource::Callback> mCallback;
@@ -615,13 +603,9 @@ void SurfaceFlinger::init() {
     getDefaultDisplayDevice()->makeCurrent(mEGLDisplay, mEGLContext);
 
     // start the EventThread
-    sp<VSyncSource> vsyncSrc = new DispSyncSource(&mPrimaryDispSync,
-            vsyncPhaseOffsetNs, true);
+    sp<VSyncSource> vsyncSrc = new DispSyncSource(&mPrimaryDispSync);
     mEventThread = new EventThread(vsyncSrc);
-    sp<VSyncSource> sfVsyncSrc = new DispSyncSource(&mPrimaryDispSync,
-            sfVsyncPhaseOffsetNs, false);
-    mSFEventThread = new EventThread(sfVsyncSrc);
-    mEventQueue.setEventThread(mSFEventThread);
+    mEventQueue.setEventThread(mEventThread);
 
     mEventControlThread = new EventControlThread(this);
     mEventControlThread->run("EventControl", PRIORITY_URGENT_DISPLAY);
