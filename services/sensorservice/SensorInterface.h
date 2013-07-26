@@ -40,6 +40,7 @@ public:
     virtual status_t setDelay(void* ident, int handle, int64_t ns) = 0;
     virtual Sensor getSensor() const = 0;
     virtual bool isVirtual() const = 0;
+    virtual void autoDisable(void *ident, int handle) { }
 };
 
 // ---------------------------------------------------------------------------
@@ -61,6 +62,7 @@ public:
     virtual status_t setDelay(void* ident, int handle, int64_t ns);
     virtual Sensor getSensor() const;
     virtual bool isVirtual() const { return false; }
+    virtual void autoDisable(void *ident, int handle);
 };
 
 

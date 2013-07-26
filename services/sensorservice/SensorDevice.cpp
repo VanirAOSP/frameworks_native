@@ -144,6 +144,12 @@ ssize_t SensorDevice::poll(sensors_event_t* buffer, size_t count) {
     return c;
 }
 
+void SensorDevice::autoDisable(void *ident, int handle) {
+    Info& info( mActivationCount.editValueFor(handle) );
+    Mutex::Autolock _l(mLock);
+    info.rates.removeItem(ident);
+}
+
 status_t SensorDevice::activate(void* ident, int handle, int enabled)
 {
     if (!mSensorDevice) return NO_INIT;
@@ -208,6 +214,15 @@ status_t SensorDevice::activate(void* ident, int handle, int enabled)
         ALOGE_IF(err, "Error %s sensor %d (%s)",
                 enabled ? "activating" : "disabling",
                 handle, strerror(-err));
+
+        if (err != NO_ERROR) {
+            // clean-up on failure
+            if (enabled) {
+                // failure when enabling the sensor
+                Mutex::Autolock _l(mLock);
+                info.rates.removeItem(ident);
+            }
+        }
     }
 
     { // scope for the lock
@@ -228,6 +243,12 @@ status_t SensorDevice::setDelay(void* ident, int handle, int64_t ns)
     if (err < 0) return err;
     ns = info.selectDelay();
     return mSensorDevice->setDelay(mSensorDevice, handle, ns);
+}
+
+int SensorDevice::getHalDeviceVersion() const {
+    if (!mSensorDevice) return -1;
+
+    return mSensorDevice->common.version;
 }
 
 // ---------------------------------------------------------------------------

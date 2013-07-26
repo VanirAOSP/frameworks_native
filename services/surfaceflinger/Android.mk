@@ -2,23 +2,22 @@ LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES:= \
-    Client.cpp                              \
-    DisplayDevice.cpp                       \
-    EventThread.cpp                         \
-    Layer.cpp                               \
-    LayerBase.cpp                           \
-    LayerDim.cpp                            \
-    LayerScreenshot.cpp                     \
-    DisplayHardware/FramebufferSurface.cpp  \
-    DisplayHardware/GraphicBufferAlloc.cpp  \
-    DisplayHardware/HWComposer.cpp          \
-    DisplayHardware/PowerHAL.cpp            \
-    GLExtensions.cpp                        \
-    MessageQueue.cpp                        \
-    SurfaceFlinger.cpp                      \
-    SurfaceTextureLayer.cpp                 \
-    Transform.cpp                           \
-    
+    Client.cpp \
+    DisplayDevice.cpp \
+    EventThread.cpp \
+    FrameTracker.cpp \
+    GLExtensions.cpp \
+    Layer.cpp \
+    LayerDim.cpp \
+    MessageQueue.cpp \
+    SurfaceFlinger.cpp \
+    SurfaceFlingerConsumer.cpp \
+    SurfaceTextureLayer.cpp \
+    Transform.cpp \
+    DisplayHardware/FramebufferSurface.cpp \
+    DisplayHardware/HWComposer.cpp \
+    DisplayHardware/PowerHAL.cpp \
+    DisplayHardware/VirtualDisplaySurface.cpp \
 
 LOCAL_CFLAGS:= -DLOG_TAG=\"SurfaceFlinger\"
 LOCAL_CFLAGS += -DGL_GLEXT_PROTOTYPES -DEGL_EGLEXT_PROTOTYPES
@@ -48,6 +47,7 @@ LOCAL_CFLAGS += -Wno-error=strict-aliasing
 
 LOCAL_SHARED_LIBRARIES := \
 	libcutils \
+	liblog \
 	libdl \
 	libhardware \
 	libutils \
@@ -80,6 +80,7 @@ LOCAL_SRC_FILES:= \
 
 LOCAL_SHARED_LIBRARIES := \
 	libcutils \
+	liblog \
 	libdl
 
 LOCAL_MODULE:= libsurfaceflinger_ddmconnection

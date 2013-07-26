@@ -24,6 +24,7 @@
 #include <ui/PixelFormat.h>
 #include <ui/Rect.h>
 #include <utils/Flattenable.h>
+#include <utils/RefBase.h>
 
 
 struct ANativeWindowBuffer;
@@ -37,10 +38,8 @@ class GraphicBufferMapper;
 // ===========================================================================
 
 class GraphicBuffer
-    : public ANativeObjectBase<
-        ANativeWindowBuffer,
-        GraphicBuffer, 
-        LightRefBase<GraphicBuffer> >, public Flattenable
+    : public ANativeObjectBase< ANativeWindowBuffer, GraphicBuffer, RefBase >,
+      public Flattenable
 {
 public:
 
@@ -102,6 +101,9 @@ public:
 
     status_t lock(uint32_t usage, void** vaddr);
     status_t lock(uint32_t usage, const Rect& rect, void** vaddr);
+    // For HAL_PIXEL_FORMAT_YCbCr_420_888
+    status_t lockYCbCr(uint32_t usage, android_ycbcr *ycbcr);
+    status_t lockYCbCr(uint32_t usage, const Rect& rect, android_ycbcr *ycbcr);
     status_t unlock();
 #ifdef QCOM_BSP
     status_t perform(buffer_handle_t hnd, int operation,
@@ -137,7 +139,6 @@ private:
     friend class Surface;
     friend class BpSurface;
     friend class BnSurface;
-    friend class SurfaceTextureClient;
     friend class LightRefBase<GraphicBuffer>;
     GraphicBuffer(const GraphicBuffer& rhs);
     GraphicBuffer& operator = (const GraphicBuffer& rhs);
