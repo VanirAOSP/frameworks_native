@@ -136,7 +136,16 @@ void binder_close(struct binder_state *bs)
 
 int binder_become_context_manager(struct binder_state *bs)
 {
-    return ioctl(bs->fd, BINDER_SET_CONTEXT_MGR, 0);
+    int ret;
+    ret = ioctl(bs->fd, BINDER_SET_CONTEXT_MGR, 0);
+    if (ret < 0) {
+        fprintf(stderr,"binder_set_context_manager: ioctl FAIL (%s)\n", strerror(errno));
+#if BCTEST_DEBUG
+    } else {
+        fprintf(stderr,"binder_set_context_manager: ioctl PASS\n");
+#endif
+    }
+    return ret;
 }
 
 int binder_write(struct binder_state *bs, void *data, unsigned len)
@@ -151,8 +160,12 @@ int binder_write(struct binder_state *bs, void *data, unsigned len)
     bwr.read_buffer = 0;
     res = ioctl(bs->fd, BINDER_WRITE_READ, &bwr);
     if (res < 0) {
-        fprintf(stderr,"binder_write: ioctl failed (%s)\n",
+        fprintf(stderr,"binder_write: ioctl FAIL (%s)\n",
                 strerror(errno));
+#if BCTEST_DEBUG
+    } else {
+        fprintf(stderr,"binder_write: ioctl PASS\n");
+#endif
     }
     return res;
 }
@@ -339,8 +352,12 @@ int binder_call(struct binder_state *bs,
         res = ioctl(bs->fd, BINDER_WRITE_READ, &bwr);
 
         if (res < 0) {
-            fprintf(stderr,"binder: ioctl failed (%s)\n", strerror(errno));
+            fprintf(stderr,"binder: ioctl FAIL (%s)\n", strerror(errno));
             goto fail;
+#if BCTEST_DEBUG
+        } else {
+            fprintf(stderr,"binder: ioctl PASS\n");
+#endif
         }
 
         res = binder_parse(bs, reply, readbuf, bwr.read_consumed, 0);
@@ -376,7 +393,14 @@ void binder_loop(struct binder_state *bs, binder_handler func)
 
         if (res < 0) {
             ALOGE("binder_loop: ioctl failed (%s)\n", strerror(errno));
+#if BCTEST_DEBUG
+            fprintf(stderr,"binder_loop: ioctl FAIL (%s)\n", strerror(errno));
+#endif
             break;
+#if BCTEST_DEBUG
+        } else {
+            fprintf(stderr,"binder_loop: ioctl PASS\n");
+#endif
         }
 
         res = binder_parse(bs, 0, readbuf, bwr.read_consumed, func);
