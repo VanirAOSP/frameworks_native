@@ -32,23 +32,20 @@
 
 namespace android {
 // ----------------------------------------------------------------------------
-
-#ifdef QCOM_BSP
 /*
  * Structure to hold the buffer geometry
  */
-struct QBufGeometry {
+struct BufGeometry {
     int mWidth;
     int mHeight;
     int mFormat;
-    QBufGeometry(): mWidth(0), mHeight(0), mFormat(0) {}
+    BufGeometry(): mWidth(0), mHeight(0), mFormat(0) {}
     void set(int w, int h, int f) {
         mWidth = w;
         mHeight = h;
         mFormat = f;
     }
 };
-#endif
 
 class BufferQueue : public BnGraphicBufferProducer {
 public:
@@ -223,21 +220,6 @@ public:
     // The default mode is asynchronous.
     virtual status_t setSynchronousMode(bool enabled);
 
-#ifdef QCOM_BSP
-    // setBufferSize enables us to specify user defined sizes for the buffers
-    // that need to be allocated by surfaceflinger for its client. This is
-    // useful for cases where the client doesn't want the gralloc to calculate
-    // buffer size. client should reset this value to 0, if it wants gralloc
-    // to calculate the size for the buffer. this will take effect from next
-    // dequeue buffer.
-    virtual status_t setBuffersSize(int size);
-
-    // update buffer width, height and format for a native buffer
-    // dynamically from the client which will take effect in the next
-    // queue buffer.
-    virtual status_t updateBuffersGeometry(int w, int h, int f);
-#endif
-
     // connect attempts to connect a producer API to the BufferQueue.  This
     // must be called before any other IGraphicBufferProducer methods are
     // called except for getAllocator.  A consumer must already be connected.
@@ -262,6 +244,19 @@ public:
     // dump our state in a String
     virtual void dump(String8& result) const;
     virtual void dump(String8& result, const char* prefix, char* buffer, size_t SIZE) const;
+
+    // setBufferSize enables us to specify user defined sizes for the buffers
+    // that need to be allocated by surfaceflinger for its client. This is
+    // useful for cases where the client doesn't want the gralloc to calculate
+    // buffer size. client should reset this value to 0, if it wants gralloc
+    // to calculate the size for the buffer. this will take effect from next
+    // dequeue buffer.
+    virtual status_t setBuffersSize(int size);
+
+    // update buffer width, height and format for a native buffer
+    // dynamically from the client which will take effect in the next
+    // queue buffer.
+    virtual status_t updateBuffersGeometry(int w, int h, int f);
 
     // public facing structure for BufferSlot
     struct BufferItem {
@@ -663,10 +658,8 @@ private:
     // mTransformHint is used to optimize for screen rotations
     uint32_t mTransformHint;
 
-#ifdef QCOM_BSP
-    // holds the updated buffer geometry info of the new video resolution.
-    QBufGeometry mNextBufferInfo;
-#endif
+   // holds the updated buffer geometry info of the new video resolution.
+   BufGeometry mNextBufferInfo;
 };
 
 // ----------------------------------------------------------------------------

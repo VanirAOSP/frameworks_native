@@ -117,12 +117,10 @@ private:
     int dispatchSetCrop(va_list args);
     int dispatchSetPostTransformCrop(va_list args);
     int dispatchSetUsage(va_list args);
-#ifdef QCOM_BSP
-    int dispatchUpdateBuffersGeometry(va_list args);
     int dispatchSetBuffersSize(va_list args);
-#endif
     int dispatchLock(va_list args);
     int dispatchUnlockAndPost(va_list args);
+    int dispatchUpdateBuffersGeometry(va_list args);
 
 protected:
     virtual int dequeueBuffer(ANativeWindowBuffer** buffer, int* fenceFd);
@@ -131,10 +129,7 @@ protected:
     virtual int perform(int operation, va_list args);
     virtual int query(int what, int* value) const;
     virtual int setSwapInterval(int interval);
-#ifdef QCOM_BSP
-    virtual int updateBuffersGeometry(int w, int h, int f);
-    virtual int setBuffersSize(int size);
-#endif
+
     virtual int lockBuffer_DEPRECATED(ANativeWindowBuffer* buffer);
 
     virtual int connect(int api);
@@ -148,6 +143,8 @@ protected:
     virtual int setBuffersTimestamp(int64_t timestamp);
     virtual int setCrop(Rect const* rect);
     virtual int setUsage(uint32_t reqUsage);
+    virtual int setBuffersSize(int size);
+    virtual int updateBuffersGeometry(int w, int h, int f);
 
 public:
     virtual int lock(ANativeWindow_Buffer* outBuffer, ARect* inOutDirtyBounds);
@@ -196,11 +193,9 @@ private:
     // at the next deuque operation. It is initialized to 0.
     uint32_t mReqUsage;
 
-#ifdef QCOM_BSP
     // mReqSize is the size of the buffer that will be requested
     // at the next dequeue operation. It is initialized to 0.
     uint32_t mReqSize;
-#endif
 
     // mTimestamp is the timestamp that will be used for the next buffer queue
     // operation. It defaults to NATIVE_WINDOW_TIMESTAMP_AUTO, which means that
@@ -257,6 +252,10 @@ private:
 
     // must be accessed from lock/unlock thread only
     Region mDirtyRegion;
+
+#ifdef BOARD_EGL_NEEDS_LEGACY_FB
+    bool                        mDequeuedOnce;
+#endif
 };
 
 }; // namespace android

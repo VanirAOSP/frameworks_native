@@ -60,9 +60,7 @@ Surface::Surface(
     mReqHeight = 0;
     mReqFormat = 0;
     mReqUsage = 0;
-#ifdef QCOM_BSP
     mReqSize = 0;
-#endif
     mTimestamp = NATIVE_WINDOW_TIMESTAMP_AUTO;
     mCrop.clear();
     mScalingMode = NATIVE_WINDOW_SCALING_MODE_FREEZE;
@@ -74,6 +72,9 @@ Surface::Surface(
     mTransformHint = 0;
     mConsumerRunningBehind = false;
     mConnectedToCpu = false;
+#ifdef BOARD_EGL_NEEDS_LEGACY_FB
+    mDequeuedOnce = false;
+#endif
 }
 
 Surface::~Surface() {
@@ -220,6 +221,9 @@ int Surface::dequeueBuffer(android_native_buffer_t** buffer,
     }
 
     *buffer = gbuf.get();
+#ifdef BOARD_EGL_NEEDS_LEGACY_FB
+    if (!mDequeuedOnce) mDequeuedOnce = true;
+#endif
     return OK;
 }
 
@@ -308,12 +312,19 @@ int Surface::query(int what, int* value) const {
                 }
                 break;
             case NATIVE_WINDOW_QUEUES_TO_WINDOW_COMPOSER: {
-                sp<ISurfaceComposer> composer(
-                        ComposerService::getComposerService());
-                if (composer->authenticateSurfaceTexture(mGraphicBufferProducer)) {
-                    *value = 1;
-                } else {
+#ifdef BOARD_EGL_NEEDS_LEGACY_FB
+                if (!mDequeuedOnce) {
                     *value = 0;
+                } else
+#endif
+                {
+                    sp<ISurfaceComposer> composer(
+                            ComposerService::getComposerService());
+                    if (composer->authenticateSurfaceTexture(mGraphicBufferProducer)) {
+                        *value = 1;
+                    } else {
+                        *value = 0;
+                    }
                 }
                 return NO_ERROR;
             }
@@ -383,14 +394,9 @@ int Surface::perform(int operation, va_list args)
     case NATIVE_WINDOW_SET_BUFFERS_FORMAT:
         res = dispatchSetBuffersFormat(args);
         break;
-#ifdef QCOM_BSP
     case NATIVE_WINDOW_SET_BUFFERS_SIZE:
         res = dispatchSetBuffersSize(args);
         break;
-    case NATIVE_WINDOW_UPDATE_BUFFERS_GEOMETRY:
-        res = dispatchUpdateBuffersGeometry(args);
-        break;
-#endif
     case NATIVE_WINDOW_LOCK:
         res = dispatchLock(args);
         break;
@@ -405,6 +411,9 @@ int Surface::perform(int operation, va_list args)
         break;
     case NATIVE_WINDOW_API_DISCONNECT:
         res = dispatchDisconnect(args);
+        break;
+    case NATIVE_WINDOW_UPDATE_BUFFERS_GEOMETRY:
+        res = dispatchUpdateBuffersGeometry(args);
         break;
     default:
         res = NAME_NOT_FOUND;
@@ -442,7 +451,6 @@ int Surface::dispatchSetBuffersGeometry(va_list args) {
     int w = va_arg(args, int);
     int h = va_arg(args, int);
     int f = va_arg(args, int);
-
     int err = setBuffersDimensions(w, h);
     if (err != 0) {
         return err;
@@ -453,7 +461,6 @@ int Surface::dispatchSetBuffersGeometry(va_list args) {
 int Surface::dispatchSetBuffersDimensions(va_list args) {
     int w = va_arg(args, int);
     int h = va_arg(args, int);
-
     return setBuffersDimensions(w, h);
 }
 
@@ -468,19 +475,10 @@ int Surface::dispatchSetBuffersFormat(va_list args) {
     return setBuffersFormat(f);
 }
 
-#ifdef QCOM_BSP
 int Surface::dispatchSetBuffersSize(va_list args) {
     int size = va_arg(args, int);
     return setBuffersSize(size);
 }
-
-int SurfaceTextureClient::dispatchUpdateBuffersGeometry(va_list args) {
-    int w = va_arg(args, int);
-    int h = va_arg(args, int);
-    int f = va_arg(args, int);
-    return updateBuffersGeometry(w, h, f);
-}
-#endif
 
 int Surface::dispatchSetScalingMode(va_list args) {
     int m = va_arg(args, int);
@@ -507,6 +505,12 @@ int Surface::dispatchUnlockAndPost(va_list args) {
     return unlockAndPost();
 }
 
+int Surface::dispatchUpdateBuffersGeometry(va_list args) {
+    int w = va_arg(args, int);
+    int h = va_arg(args, int);
+    int f = va_arg(args, int);
+    return updateBuffersGeometry(w, h, f);
+}
 
 int Surface::connect(int api) {
     ATRACE_CALL();
@@ -537,9 +541,7 @@ int Surface::disconnect(int api) {
         mReqWidth = 0;
         mReqHeight = 0;
         mReqUsage = 0;
-#ifdef QCOM_BSP
         mReqSize = 0;
-#endif
         mCrop.clear();
         mScalingMode = NATIVE_WINDOW_SCALING_MODE_FREEZE;
         mTransform = 0;
@@ -640,11 +642,10 @@ int Surface::setBuffersFormat(int format)
     return NO_ERROR;
 }
 
-#ifdef QCOM_BSP
 int Surface::setBuffersSize(int size)
 {
     ATRACE_CALL();
-    ALOGV("SurfaceTextureClient::setBuffersSize");
+    ALOGV("Surface::setBuffersSize");
 
     if (size<0)
         return BAD_VALUE;
@@ -652,27 +653,10 @@ int Surface::setBuffersSize(int size)
     Mutex::Autolock lock(mMutex);
     if(mReqSize != (uint32_t)size) {
         mReqSize = size;
-        return mSurfaceTexture->setBuffersSize(size);
+        mGraphicBufferProducer->setBuffersSize(size);
     }
     return NO_ERROR;
 }
-
-int SurfaceTextureClient::updateBuffersGeometry(int w, int h, int f)
-{
-    ATRACE_CALL();
-    ALOGV("SurfaceTextureClient::updateBuffersGeometry");
-
-    if (w<0 || h<0 || f<0)
-        return BAD_VALUE;
-
-    if ((w && !h) || (!w && h))
-        return BAD_VALUE;
-
-    Mutex::Autolock lock(mMutex);
-    status_t err = mSurfaceTexture->updateBuffersGeometry(w, h, f);
-    return err;
-}
-#endif
 
 int Surface::setScalingMode(int mode)
 {
@@ -709,6 +693,22 @@ int Surface::setBuffersTimestamp(int64_t timestamp)
     Mutex::Autolock lock(mMutex);
     mTimestamp = timestamp;
     return NO_ERROR;
+}
+
+int Surface::updateBuffersGeometry(int w, int h, int f)
+{
+    ATRACE_CALL();
+    ALOGV("SurfaceTextureClient::updateBuffersGeometry");
+
+    if (w<0 || h<0 || f<0)
+        return BAD_VALUE;
+
+    if ((w && !h) || (!w && h))
+        return BAD_VALUE;
+
+    Mutex::Autolock lock(mMutex);
+    status_t err = mGraphicBufferProducer->updateBuffersGeometry(w, h, f);
+    return err;
 }
 
 void Surface::freeAllBuffers() {
@@ -787,7 +787,8 @@ status_t Surface::lock(
             return err;
         }
         // we're intending to do software rendering from this point
-        setUsage(GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN);
+        setUsage(mReqUsage | GRALLOC_USAGE_SW_READ_OFTEN |
+                GRALLOC_USAGE_SW_WRITE_OFTEN);
     }
 
     ANativeWindowBuffer* out;

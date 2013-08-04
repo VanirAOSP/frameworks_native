@@ -32,11 +32,11 @@
 #include <utils/Trace.h>
 
 // Macros for including the BufferQueue name in log messages
-#define ST_LOGV(x, ...) ALOGV("[%s] " x, mConsumerName.string(), ##__VA_ARGS__)
-#define ST_LOGD(x, ...) ALOGD("[%s] " x, mConsumerName.string(), ##__VA_ARGS__)
-#define ST_LOGI(x, ...) ALOGI("[%s] " x, mConsumerName.string(), ##__VA_ARGS__)
-#define ST_LOGW(x, ...) ALOGW("[%s] " x, mConsumerName.string(), ##__VA_ARGS__)
-#define ST_LOGE(x, ...) ALOGE("[%s] " x, mConsumerName.string(), ##__VA_ARGS__)
+#define ST_LOGV(x, ...) ALOGV("[%s] "x, mConsumerName.string(), ##__VA_ARGS__)
+#define ST_LOGD(x, ...) ALOGD("[%s] "x, mConsumerName.string(), ##__VA_ARGS__)
+#define ST_LOGI(x, ...) ALOGI("[%s] "x, mConsumerName.string(), ##__VA_ARGS__)
+#define ST_LOGW(x, ...) ALOGW("[%s] "x, mConsumerName.string(), ##__VA_ARGS__)
+#define ST_LOGE(x, ...) ALOGE("[%s] "x, mConsumerName.string(), ##__VA_ARGS__)
 
 #define ATRACE_BUFFER_INDEX(index)                                            \
     if (ATRACE_ENABLED()) {                                                   \
@@ -63,7 +63,6 @@ static const char* scalingModeName(int scalingMode) {
     }
 }
 
-#ifdef QCOM_BSP
 /*
  * Checks if memory needs to be reallocated for this buffer.
  *
@@ -73,9 +72,9 @@ static const char* scalingModeName(int scalingMode) {
  *
  * @return True if a memory reallocation is required.
  */
-static bool needNewBuffer(const QBufGeometry currentGeometry,
-                   const QBufGeometry requiredGeometry,
-                   const QBufGeometry updatedGeometry)
+static bool needNewBuffer(const BufGeometry currentGeometry,
+                   const BufGeometry requiredGeometry,
+                   const BufGeometry updatedGeometry)
 {
     // no allocation required if there is change in resoultion or format.
     if (updatedGeometry.mWidth && updatedGeometry.mHeight &&
@@ -105,7 +104,7 @@ static bool needNewBuffer(const QBufGeometry currentGeometry,
  * @return True if a buffer needs to be updated with new attributes.
  */
 static bool isBufferGeometryUpdateRequired(sp<GraphicBuffer> buffer,
-                                 const QBufGeometry updatedGeometry)
+                                 const BufGeometry updatedGeometry)
 {
     if (buffer == 0) {
         ALOGW("isBufferGeometryUpdateRequired: graphic buffer is NULL");
@@ -125,7 +124,6 @@ static bool isBufferGeometryUpdateRequired(sp<GraphicBuffer> buffer,
     }
     return true;
 }
-#endif
 
 BufferQueue::BufferQueue(bool allowSynchronousMode,
         const sp<IGraphicBufferAlloc>& allocator) :
@@ -157,9 +155,7 @@ BufferQueue::BufferQueue(bool allowSynchronousMode,
     } else {
         mGraphicBufferAlloc = allocator;
     }
-#ifdef QCOM_BSP
     mNextBufferInfo.set(0, 0, 0);
-#endif
 }
 
 BufferQueue::~BufferQueue() {
@@ -262,23 +258,12 @@ status_t BufferQueue::setBufferCount(int bufferCount) {
     return NO_ERROR;
 }
 
-#ifdef QCOM_BSP
 status_t BufferQueue::setBuffersSize(int size) {
     ST_LOGV("setBuffersSize: size=%d", size);
     Mutex::Autolock lock(mMutex);
     mGraphicBufferAlloc->setGraphicBufferSize(size);
     return NO_ERROR;
 }
-#endif
-
-#ifdef QCOM_BSP
-status_t BufferQueue::setBuffersSize(int size) {
-    ST_LOGV("setBuffersSize: size=%d", size);
-    Mutex::Autolock lock(mMutex);
-    mGraphicBufferAlloc->setGraphicBufferSize(size);
-    return NO_ERROR;
-}
-#endif
 
 int BufferQueue::query(int what, int* outValue)
 {
@@ -461,29 +446,21 @@ status_t BufferQueue::dequeueBuffer(int *outBuf, sp<Fence>* outFence,
         mSlots[buf].mBufferState = BufferSlot::DEQUEUED;
 
         const sp<GraphicBuffer>& buffer(mSlots[buf].mGraphicBuffer);
-#ifdef QCOM_BSP
-        QBufGeometry currentGeometry;
+        BufGeometry currentGeometry;
         if (buffer != NULL)
             currentGeometry.set(buffer->width, buffer->height, buffer->format);
         else
             currentGeometry.set(0, 0, 0);
 
-        QBufGeometry requiredGeometry;
+        BufGeometry requiredGeometry;
         requiredGeometry.set(w, h, format);
 
-        QBufGeometry updatedGeometry;
+        BufGeometry updatedGeometry;
         updatedGeometry.set(mNextBufferInfo.mWidth, mNextBufferInfo.mHeight,
                             mNextBufferInfo.mFormat);
-#endif
 
         if ((buffer == NULL) ||
-#ifdef QCOM_BSP
             needNewBuffer(currentGeometry, requiredGeometry, updatedGeometry) ||
-#else
-            (uint32_t(buffer->width)  != w) ||
-            (uint32_t(buffer->height) != h) ||
-            (uint32_t(buffer->format) != format) ||
-#endif
             ((uint32_t(buffer->usage) & usage) != usage))
         {
             mSlots[buf].mAcquireCalled = false;
@@ -544,15 +521,6 @@ status_t BufferQueue::dequeueBuffer(int *outBuf, sp<Fence>* outFence,
 
     return returnFlags;
 }
-
-#ifdef QCOM_BSP
-status_t BufferQueue::updateBuffersGeometry(int w, int h, int f) {
-    ST_LOGV("updateBuffersGeometry: w=%d h=%d f=%d", w, h, f);
-    Mutex::Autolock lock(mMutex);
-    mNextBufferInfo.set(w, h, f);
-    return NO_ERROR;
-}
-#endif
 
 status_t BufferQueue::setSynchronousMode(bool enabled) {
     ATRACE_CALL();
@@ -631,13 +599,10 @@ status_t BufferQueue::queueBuffer(int buf,
                     "buffer", buf);
             return -EINVAL;
         }
-
-#ifdef QCOM_BSP
         // Update the buffer Geometry if required
-        QBufGeometry updatedGeometry;
+        BufGeometry updatedGeometry;
         updatedGeometry.set(mNextBufferInfo.mWidth,
                             mNextBufferInfo.mHeight, mNextBufferInfo.mFormat);
-#endif
         const sp<GraphicBuffer>& graphicBuffer(mSlots[buf].mGraphicBuffer);
 #ifdef QCOM_BSP
         //  Update the geometry of this buffer without reallocation.
@@ -686,8 +651,6 @@ status_t BufferQueue::queueBuffer(int buf,
                 Fifo::iterator front(mQueue.begin());
                 // buffer currently queued is freed
                 mSlots[*front].mBufferState = BufferSlot::FREE;
-                // reset the frame number of the freed buffer
-                mSlots[*front].mFrameNumber = 0;
                 // and we record the new buffer index in the queued list
                 *front = buf;
             }
@@ -823,10 +786,8 @@ status_t BufferQueue::disconnect(int api) {
             case NATIVE_WINDOW_API_CAMERA:
                 if (mConnectedApi == api) {
                     drainQueueAndFreeBuffersLocked();
-                    mConnectedApi = NO_CONNECTED_API;
-#ifdef QCOM_BSP
                     mNextBufferInfo.set(0, 0, 0);
-#endif
+                    mConnectedApi = NO_CONNECTED_API;
                     mDequeueCondition.broadcast();
                     listener = mConsumerListener;
                 } else {
@@ -916,6 +877,13 @@ void BufferQueue::dump(String8& result, const char* prefix,
         }
         result.append("\n");
     }
+}
+
+status_t BufferQueue::updateBuffersGeometry(int w, int h, int f) {
+    ST_LOGV("updateBuffersGeometry: w=%d h=%d f=%d", w, h, f);
+    Mutex::Autolock lock(mMutex);
+    mNextBufferInfo.set(w, h, f);
+    return NO_ERROR;
 }
 
 void BufferQueue::freeBufferLocked(int slot) {

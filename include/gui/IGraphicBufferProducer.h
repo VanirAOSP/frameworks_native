@@ -178,20 +178,6 @@ public:
     // The default mode is asynchronous.
     virtual status_t setSynchronousMode(bool enabled) = 0;
 
-#ifdef QCOM_BSP
-   // setBufferSize enables to specify the user defined size of the buffer
-   // that needs to be allocated by surfaceflinger for its client. This is
-   // useful for cases where the client doesn't want the gralloc to calculate
-   // buffer size. client should reset this value to 0, if it wants gralloc to
-   // calculate the size for the buffer. this will take effect from next
-   // dequeue buffer.
-    virtual status_t setBuffersSize(int size) = 0;
-
-    // update buffer width, height and format information from the client
-    // which will take effect in the next queue buffer.
-    virtual status_t updateBuffersGeometry(int w, int h, int f) = 0;
-#endif
-
     // connect attempts to connect a client API to the IGraphicBufferProducer.
     // This must be called before any other IGraphicBufferProducer methods are
     // called except for getAllocator.
@@ -213,6 +199,18 @@ public:
     // This method will fail if the the IGraphicBufferProducer is not currently
     // connected to the specified client API.
     virtual status_t disconnect(int api) = 0;
+
+    // setBufferSize enables to specify the user defined size of the buffer
+    // that needs to be allocated by surfaceflinger for its client. This is
+    // useful for cases where the client doesn't want the gralloc to calculate
+    // buffer size. client should reset this value to 0, if it wants gralloc to
+    // calculate the size for the buffer. this will take effect from next
+    // dequeue buffer.
+    virtual status_t setBuffersSize(int size) = 0;
+
+    // update buffer width, height and format information from the client
+    // which will take effect in the next queue buffer.
+    virtual status_t updateBuffersGeometry(int w, int h, int f) = 0;
 };
 
 // ----------------------------------------------------------------------------

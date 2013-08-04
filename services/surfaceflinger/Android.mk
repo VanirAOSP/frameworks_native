@@ -57,13 +57,21 @@ LOCAL_SHARED_LIBRARIES := \
 	libui \
 	libgui
 
+ifeq ($(TARGET_USES_QCOM_BSP), true)
+ifeq ($(TARGET_QCOM_DISPLAY_VARIANT),caf)
+    LOCAL_C_INCLUDES += hardware/qcom/display-caf/libgralloc
+else
+    LOCAL_C_INCLUDES += hardware/qcom/display/libgralloc
+endif
+    LOCAL_CFLAGS += -DQCOM_BSP
+endif
+
 ifeq ($(BOARD_USES_SAMSUNG_HDMI),true)
         LOCAL_CFLAGS += -DSAMSUNG_HDMI_SUPPORT
         LOCAL_SHARED_LIBRARIES += libTVOut libhdmiclient
         LOCAL_C_INCLUDES += hardware/samsung/$(TARGET_BOARD_PLATFORM)/libhdmi/libhdmiservice
         LOCAL_C_INCLUDES += hardware/samsung/$(TARGET_BOARD_PLATFORM)/include
 endif
-
 
 LOCAL_MODULE:= libsurfaceflinger
 
