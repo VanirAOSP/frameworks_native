@@ -145,10 +145,7 @@ private:
             uint32_t usage);
     status_t initSize(uint32_t w, uint32_t h, PixelFormat format,
             uint32_t usage, uint32_t bufferSize);
-#ifdef QCOM_BSP
-    status_t initSize(uint32_t w, uint32_t h, PixelFormat format,
-            uint32_t usage, uint32_t bufferSize);
-#endif
+
     void free_handle();
 
     // Flattenable interface
