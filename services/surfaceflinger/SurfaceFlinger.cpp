@@ -547,6 +547,11 @@ status_t SurfaceFlinger::readyToRun()
                 hw->acquireScreen();
             }
             mDisplays.add(token, hw);
+            PixelFormatInfo info;
+            getPixelFormatInfo(mHwc->getFormat(i), &info);
+            if (!mUseDithering && info.bitsPerPixel <= 16) {
+                mUseDithering = 1;
+            }
         }
     }
 
