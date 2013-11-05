@@ -264,7 +264,7 @@ bool KeyCharacterMap::getFallbackAction(int32_t keyCode, int32_t metaState,
     return result;
 }
 
-char16_t KeyCharacterMap::getMatch(int32_t keyCode, const char16_t* chars, size_t numChars,
+char16_t KeyCharacterMap::getMatch(int32_t keyCode, const uint16_t* chars, size_t numChars,
         int32_t metaState) const {
     char16_t result = 0;
     const Key* key;
@@ -294,7 +294,7 @@ char16_t KeyCharacterMap::getMatch(int32_t keyCode, const char16_t* chars, size_
     return result;
 }
 
-bool KeyCharacterMap::getEvents(int32_t deviceId, const char16_t* chars, size_t numChars,
+bool KeyCharacterMap::getEvents(int32_t deviceId, const uint16_t* chars, size_t numChars,
         Vector<KeyEvent>& outEvents) const {
     nsecs_t now = systemTime(SYSTEM_TIME_MONOTONIC);
 

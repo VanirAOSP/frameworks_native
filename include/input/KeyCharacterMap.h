@@ -111,13 +111,13 @@ public:
      * preferring the one with the specified meta key modifiers.
      * Returns 0 if no matching character is generated.
      */
-    char16_t getMatch(int32_t keyCode, const char16_t* chars,
+    char16_t getMatch(int32_t keyCode, const uint16_t* chars,
             size_t numChars, int32_t metaState) const;
 
     /* Gets a sequence of key events that could plausibly generate the specified
      * character sequence.  Returns false if some of the characters cannot be generated.
      */
-    bool getEvents(int32_t deviceId, const char16_t* chars, size_t numChars,
+    bool getEvents(int32_t deviceId, const uint16_t* chars, size_t numChars,
             Vector<KeyEvent>& outEvents) const;
 
     /* Maps a scan code and usage code to a key code, in case this key map overrides
