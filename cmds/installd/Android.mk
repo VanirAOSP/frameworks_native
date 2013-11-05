@@ -6,8 +6,8 @@ common_src_files := \
 #
 # Static library used in testing and executable
 #
-
 include $(CLEAR_VARS)
+
 
 LOCAL_SRC_FILES := \
     $(common_src_files)
@@ -23,6 +23,10 @@ include $(BUILD_STATIC_LIBRARY)
 #
 
 include $(CLEAR_VARS)
+
+ifneq ($(TARGET_BUILD_VARIANT),user)
+    LOCAL_CFLAGS += -DALLOW_DEXROOT_ON_CACHE
+endif
 
 LOCAL_SRC_FILES := \
     installd.c \
