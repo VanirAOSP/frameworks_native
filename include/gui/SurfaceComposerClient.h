@@ -73,6 +73,16 @@ public:
 
     /* triggers screen on and waits for it to complete */
     static void unblankDisplay(const sp<IBinder>& display);
+    // TODO: Remove me.  Do not use.
+    // This is a compatibility shim for one product whose drivers are depending on
+    // this legacy function (when they shouldn't).
+    static status_t getDisplayInfo(int32_t displayId, DisplayInfo* info);
+
+#if defined(ICS_CAMERA_BLOB) || defined(MR0_CAMERA_BLOB)
+    static ssize_t getDisplayWidth(int32_t displayId);
+    static ssize_t getDisplayHeight(int32_t displayId);
+    static ssize_t getDisplayOrientation(int32_t displayId);
+#endif
 
     // ------------------------------------------------------------------------
     // surface creation / destruction
@@ -108,6 +118,8 @@ public:
 
     //! Close a composer transaction on all active SurfaceComposerClients.
     static void closeGlobalTransaction(bool synchronous = false);
+
+    static int setOrientation(int32_t dpy, int orientation, uint32_t flags);
 
     //! Flag the currently open transaction as an animation transaction.
     static void setAnimationTransaction();
@@ -175,6 +187,10 @@ private:
 public:
     ScreenshotClient();
     ~ScreenshotClient();
+
+#if defined(TOROPLUS_RADIO)
+    status_t update();
+#endif
 
     // frees the previous screenshot and capture a new one
     status_t update(const sp<IBinder>& display);

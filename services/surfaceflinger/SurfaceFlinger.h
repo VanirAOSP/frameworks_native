@@ -55,6 +55,10 @@
 #include "DisplayHardware/HWComposer.h"
 #include "Effects/Daltonizer.h"
 
+#ifdef SAMSUNG_HDMI_SUPPORT
+#include "SecHdmiClient.h"
+#endif
+
 namespace android {
 
 // ---------------------------------------------------------------------------
@@ -202,7 +206,7 @@ private:
     virtual status_t captureScreen(const sp<IBinder>& display,
             const sp<IGraphicBufferProducer>& producer,
             uint32_t reqWidth, uint32_t reqHeight,
-            uint32_t minLayerZ, uint32_t maxLayerZ);
+            uint32_t minLayerZ, uint32_t maxLayerZ, bool isCpuConsumer);
     // called when screen needs to turn off
     virtual void blank(const sp<IBinder>& display);
     // called when screen is turning back on
@@ -312,7 +316,8 @@ private:
             const sp<const DisplayDevice>& hw,
             const sp<IGraphicBufferProducer>& producer,
             uint32_t reqWidth, uint32_t reqHeight,
-            uint32_t minLayerZ, uint32_t maxLayerZ);
+            uint32_t minLayerZ, uint32_t maxLayerZ,
+            bool useReadPixels);
 
     /* ------------------------------------------------------------------------
      * EGL
@@ -478,6 +483,9 @@ private:
 
     Daltonizer mDaltonizer;
     bool mDaltonize;
+#if defined(SAMSUNG_HDMI_SUPPORT) && defined(SAMSUNG_EXYNOS5250)
+    SecHdmiClient *                         mHdmiClient;
+#endif
 };
 
 }; // namespace android

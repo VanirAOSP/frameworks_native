@@ -37,9 +37,6 @@ LOCAL_SRC_FILES:= \
 LOCAL_CFLAGS:= -DLOG_TAG=\"SurfaceFlinger\"
 LOCAL_CFLAGS += -DGL_GLEXT_PROTOTYPES -DEGL_EGLEXT_PROTOTYPES
 
-ifeq ($(TARGET_BOARD_PLATFORM),omap3)
-	LOCAL_CFLAGS += -DNO_RGBX_8888
-endif
 ifeq ($(TARGET_BOARD_PLATFORM),omap4)
 	LOCAL_CFLAGS += -DHAS_CONTEXT_PRIORITY
 endif
@@ -96,6 +93,13 @@ LOCAL_SHARED_LIBRARIES := \
 	libbinder \
 	libui \
 	libgui
+
+ifeq ($(BOARD_USES_SAMSUNG_HDMI),true)
+        LOCAL_CFLAGS += -DSAMSUNG_HDMI_SUPPORT
+        LOCAL_SHARED_LIBRARIES += libTVOut libhdmiclient
+        LOCAL_C_INCLUDES += hardware/samsung/$(TARGET_BOARD_PLATFORM)/libhdmi/libhdmiservice
+        LOCAL_C_INCLUDES += hardware/samsung/$(TARGET_BOARD_PLATFORM)/include
+endif
 
 LOCAL_MODULE:= libsurfaceflinger
 
