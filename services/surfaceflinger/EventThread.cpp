@@ -20,6 +20,7 @@
 #include <sys/types.h>
 
 #include <cutils/compiler.h>
+#include <cutils/properties.h>
 
 #include <gui/BitTube.h>
 #include <gui/IDisplayEventConnection.h>
@@ -41,6 +42,11 @@ EventThread::EventThread(const sp<VSyncSource>& src)
       mUseSoftwareVSync(false),
       mVsyncEnabled(false),
       mDebugVsyncEnabled(false) {
+
+    char value[PROPERTY_VALUE_MAX];
+    property_get("debug.sf.no_hw_vsync", value, "0");
+    if (1 == atoi(value))
+        mUseSoftwareVSync = true;
 
     for (int32_t i=0 ; i<DisplayDevice::NUM_BUILTIN_DISPLAY_TYPES ; i++) {
         mVSyncEvent[i].header.type = DisplayEventReceiver::DISPLAY_EVENT_VSYNC;
@@ -109,6 +115,11 @@ void EventThread::onScreenAcquired() {
         mUseSoftwareVSync = false;
         mCondition.broadcast();
     }
+
+    char value[PROPERTY_VALUE_MAX];
+    property_get("debug.sf.no_hw_vsync", value, "0");
+    if (1 == atoi(value))
+        mUseSoftwareVSync = true;
 }
 
 void EventThread::onVSyncEvent(nsecs_t timestamp) {

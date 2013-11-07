@@ -86,6 +86,11 @@ checkGlesEmulationStatus(void)
     char  prop[PROPERTY_VALUE_MAX];
     int   result = -1;
 
+    /* Running on a hardware with no GPU? */
+    property_get("ro.nohardwaregfx",prop,"false");
+    if (!strcmp(prop,"true"))
+        return 0;
+
     /* First, check for qemu=1 */
     property_get("ro.kernel.qemu",prop,"0");
     if (atoi(prop) != 1)
@@ -308,7 +313,7 @@ void *Loader::load_driver(const char* kind,
             // in the emulator case, we just return the hardcoded name
             // of the software renderer.
             if (checkGlesEmulationStatus() == 0) {
-                ALOGD("Emulator without GPU support detected. "
+                ALOGD("No GPU support detected. "
                       "Fallback to software renderer.");
                 result.setTo("/system/lib/egl/libGLES_android.so");
                 return true;
