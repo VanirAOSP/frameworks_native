@@ -334,6 +334,9 @@ private:
     size_t getMaxTextureSize() const;
     size_t getMaxViewportDims() const;
 
+    uint32_t getMinColorDepth() const { return mMinColorDepth; }
+    inline bool getUseDithering() const { return mUseDithering; }
+
     /* ------------------------------------------------------------------------
      * Display and layer stack management
      */
@@ -439,6 +442,7 @@ private:
     bool mGpuToCpuSupported;
     sp<EventThread> mEventThread;
     sp<EventControlThread> mEventControlThread;
+    uint32_t mMinColorDepth;
     EGLContext mEGLContext;
     EGLConfig mEGLConfig;
     EGLDisplay mEGLDisplay;
@@ -466,6 +470,7 @@ private:
     volatile nsecs_t mDebugInTransaction;
     nsecs_t mLastTransactionTime;
     bool mBootFinished;
+    bool mUseDithering;
 
     // these are thread safe
     mutable MessageQueue mEventQueue;
