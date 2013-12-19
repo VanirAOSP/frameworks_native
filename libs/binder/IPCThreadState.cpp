@@ -736,7 +736,7 @@ status_t IPCThreadState::waitForResponse(Parcel *reply, status_t *acquireResult)
             err = FAILED_TRANSACTION;
             goto finish;
         
-        case BR_ACQUIRE_RESULT:
+        case static_cast<int32_t>(BR_ACQUIRE_RESULT):
             {
                 ALOG_ASSERT(acquireResult != NULL, "Unexpected brACQUIRE_RESULT");
                 const int32_t result = mIn.readInt32();
@@ -745,7 +745,7 @@ status_t IPCThreadState::waitForResponse(Parcel *reply, status_t *acquireResult)
             }
             goto finish;
         
-        case BR_REPLY:
+        case static_cast<int32_t>(BR_REPLY):
             {
                 binder_transaction_data tr;
                 err = mIn.read(&tr, sizeof(tr));
@@ -946,14 +946,14 @@ status_t IPCThreadState::executeCommand(int32_t cmd)
     status_t result = NO_ERROR;
     
     switch (cmd) {
-    case BR_ERROR:
+    case static_cast<int32_t>(BR_ERROR):
         result = mIn.readInt32();
         break;
         
     case BR_OK:
         break;
         
-    case BR_ACQUIRE:
+    case static_cast<int32_t>(BR_ACQUIRE):
         refs = (RefBase::weakref_type*)mIn.readInt32();
         obj = (BBinder*)mIn.readInt32();
         ALOG_ASSERT(refs->refBase() == obj,
@@ -969,7 +969,7 @@ status_t IPCThreadState::executeCommand(int32_t cmd)
         mOut.writeInt32((int32_t)obj);
         break;
         
-    case BR_RELEASE:
+    case static_cast<int32_t>(BR_RELEASE):
         refs = (RefBase::weakref_type*)mIn.readInt32();
         obj = (BBinder*)mIn.readInt32();
         ALOG_ASSERT(refs->refBase() == obj,
@@ -982,7 +982,7 @@ status_t IPCThreadState::executeCommand(int32_t cmd)
         mPendingStrongDerefs.push(obj);
         break;
         
-    case BR_INCREFS:
+    case static_cast<int32_t>(BR_INCREFS):
         refs = (RefBase::weakref_type*)mIn.readInt32();
         obj = (BBinder*)mIn.readInt32();
         refs->incWeak(mProcess.get());
@@ -991,7 +991,7 @@ status_t IPCThreadState::executeCommand(int32_t cmd)
         mOut.writeInt32((int32_t)obj);
         break;
         
-    case BR_DECREFS:
+    case static_cast<int32_t>(BR_DECREFS):
         refs = (RefBase::weakref_type*)mIn.readInt32();
         obj = (BBinder*)mIn.readInt32();
         // NOTE: This assertion is not valid, because the object may no
@@ -1003,7 +1003,7 @@ status_t IPCThreadState::executeCommand(int32_t cmd)
         mPendingWeakDerefs.push(refs);
         break;
         
-    case BR_ATTEMPT_ACQUIRE:
+    case static_cast<int32_t>(BR_ATTEMPT_ACQUIRE):
         refs = (RefBase::weakref_type*)mIn.readInt32();
         obj = (BBinder*)mIn.readInt32();
          
@@ -1018,7 +1018,7 @@ status_t IPCThreadState::executeCommand(int32_t cmd)
         }
         break;
     
-    case BR_TRANSACTION:
+    case static_cast<int32_t>(BR_TRANSACTION):
         {
             binder_transaction_data tr;
             result = mIn.read(&tr, sizeof(tr));
@@ -1105,7 +1105,7 @@ status_t IPCThreadState::executeCommand(int32_t cmd)
         }
         break;
     
-    case BR_DEAD_BINDER:
+    case static_cast<int32_t>(BR_DEAD_BINDER):
         {
             BpBinder *proxy = (BpBinder*)mIn.readInt32();
             proxy->sendObituary();
@@ -1113,7 +1113,7 @@ status_t IPCThreadState::executeCommand(int32_t cmd)
             mOut.writeInt32((int32_t)proxy);
         } break;
         
-    case BR_CLEAR_DEATH_NOTIFICATION_DONE:
+    case static_cast<int32_t>(BR_CLEAR_DEATH_NOTIFICATION_DONE):
         {
             BpBinder *proxy = (BpBinder*)mIn.readInt32();
             proxy->getWeakRefs()->decWeak(proxy);
