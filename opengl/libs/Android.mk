@@ -34,7 +34,6 @@ LOCAL_SRC_FILES:= 	       \
 
 LOCAL_SHARED_LIBRARIES += libcutils libutils liblog libGLES_trace
 LOCAL_LDLIBS := -lpthread -ldl
-LOCAL_GCC := true
 LOCAL_MODULE:= libEGL
 LOCAL_LDFLAGS += -Wl,--exclude-libs=ALL
 LOCAL_SHARED_LIBRARIES += libdl
@@ -84,7 +83,6 @@ LOCAL_SRC_FILES:= 		\
 
 LOCAL_SHARED_LIBRARIES += libcutils liblog libEGL
 LOCAL_LDLIBS := -lpthread -ldl
-LOCAL_GCC := true
 LOCAL_MODULE:= libGLESv1_CM
 
 LOCAL_SHARED_LIBRARIES += libdl
@@ -110,7 +108,6 @@ LOCAL_SRC_FILES:= 		\
 
 LOCAL_SHARED_LIBRARIES += libcutils libutils liblog libEGL
 LOCAL_LDLIBS := -lpthread -ldl
-LOCAL_GCC := true
 LOCAL_MODULE:= libGLESv2
 
 LOCAL_SHARED_LIBRARIES += libdl
@@ -148,7 +145,6 @@ LOCAL_SRC_FILES:= 		\
 #
 
 LOCAL_LDLIBS := -lpthread -ldl
-LOCAL_GCC := true
 LOCAL_MODULE:= libETC1
 
 include $(BUILD_HOST_STATIC_LIBRARY)
@@ -164,7 +160,6 @@ LOCAL_SRC_FILES:= 		\
 #
 
 LOCAL_LDLIBS := -lpthread -ldl
-LOCAL_GCC := true
 LOCAL_MODULE:= libETC1
 
 include $(BUILD_SHARED_LIBRARY)
