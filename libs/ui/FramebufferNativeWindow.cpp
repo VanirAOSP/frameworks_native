@@ -249,7 +249,7 @@ int FramebufferNativeWindow::dequeueBuffer(ANativeWindow* window,
         self->mBufferHead = 0;
 
     // wait for a free non-front buffer
-    while (self->mNumFreeBuffers < 2) {
+    while (self->mNumFreeBuffers < MIN_NUM_FRAME_BUFFERS) {
         self->mCondition.wait(self->mutex);
     }
     ALOG_ASSERT(self->buffers[index] != self->front);
