@@ -1287,7 +1287,12 @@ public:
          */
         Rect finalDR;
         srcCrop.intersect(dirtyRect, &finalDR);
-        getLayer()->dirtyRect = reinterpret_cast<hwc_rect_t const&>(finalDR);
+        union {
+            const hwc_rect_t* dirtyRect;
+            Rect* dr;
+        };
+        dr = &finalDR;
+        getLayer()->dirtyRect = *dirtyRect;
     }
 #endif
     virtual void setBuffer(const sp<GraphicBuffer>& buffer) {
