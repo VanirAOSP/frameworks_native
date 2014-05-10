@@ -60,8 +60,12 @@ endif
 LOCAL_C_INCLUDES += hardware/samsung_slsi/$(PLATFORM_DIR)/include
 endif
 
+ifneq ($(TARGET_BINDER_VM_MEGABYTES),)
+LOCAL_CFLAGS += -DBINDER_VM_MEGABYTES=$(TARGET_BINDER_VM_MEGABYTES)
+else
 ifeq ($(TARGET_ARCH_LOWMEM),true)
 LOCAL_CFLAGS += -DBINDER_VM_MEGABYTES=1
+endif
 endif
 
 LOCAL_LDLIBS += -lpthread
