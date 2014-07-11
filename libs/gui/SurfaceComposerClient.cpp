@@ -713,6 +713,13 @@ ScreenshotClient::~ScreenshotClient() {
     ScreenshotClient::release();
 }
 
+#ifdef TOROPLUS_RADIO
+status_t ScreenshotClient::update() {
+    sp<ISurfaceComposer> sm(ComposerService::getComposerService());
+    return update(sm->getBuiltInDisplay(0));
+}
+#endif
+
 sp<CpuConsumer> ScreenshotClient::getCpuConsumer() const {
     if (mCpuConsumer == NULL) {
         sp<IGraphicBufferConsumer> consumer;

@@ -203,6 +203,10 @@ public:
     ScreenshotClient();
     ~ScreenshotClient();
 
+#ifdef TOROPLUS_RADIO
+    status_t update();
+#endif
+
     // frees the previous screenshot and captures a new one
     // if cropping isn't required, callers may pass in a default Rect, e.g.:
     //   update(display, Rect(), useIdentityTransform);
