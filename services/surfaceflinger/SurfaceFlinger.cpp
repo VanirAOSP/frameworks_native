@@ -82,6 +82,10 @@
 #include "SecTVOutService.h"
 #endif
 
+#ifdef QCOM_BSP
+#include <display_config.h>
+#endif
+
 #define DISPLAY_COUNT       1
 
 /*
@@ -133,6 +137,8 @@ const String16 sHardwareTest("android.permission.HARDWARE_TEST");
 const String16 sAccessSurfaceFlinger("android.permission.ACCESS_SURFACE_FLINGER");
 const String16 sReadFramebuffer("android.permission.READ_FRAME_BUFFER");
 const String16 sDump("android.permission.DUMP");
+
+static sp<Layer> lastSurfaceViewLayer;
 
 // ---------------------------------------------------------------------------
 
@@ -668,6 +674,7 @@ int32_t SurfaceFlinger::allocateHwcDisplayId(DisplayDevice::DisplayType type) {
 
 void SurfaceFlinger::startBootAnim() {
     // start boot animation
+    mBootFinished = false;
     property_set("service.bootanim.exit", "0");
     property_set("ctl.start", "bootanim");
 }
@@ -1206,6 +1213,10 @@ void SurfaceFlinger::setUpHWComposer() {
                                             uint32_t(draw[i].orientation));
                             }
                         }
+                        if(!strncmp(layer->getName(), "SurfaceView",
+                                    11)) {
+                            lastSurfaceViewLayer = layer;
+                        }
                     }
                 }
             }
@@ -1502,8 +1513,41 @@ void SurfaceFlinger::handleTransactionLocked(uint32_t transactionFlags)
                                 || (state.viewport != draw[i].viewport)
                                 || (state.frame != draw[i].frame))
                         {
+#ifdef QCOM_BSP
+                            int orient = state.orientation;
+                            // Honor the orientation change after boot
+                            // animation completes and make sure boot
+                            // animation is shown in panel orientation always.
+                            if(mBootFinished){
+                                disp->setProjection(state.orientation,
+                                        state.viewport, state.frame);
+                                orient = state.orientation;
+                            }
+                            else{
+                                char property[PROPERTY_VALUE_MAX];
+                                int panelOrientation =
+                                        DisplayState::eOrientationDefault;
+                                if(property_get("persist.panel.orientation",
+                                            property, "0") > 0){
+                                    panelOrientation = atoi(property) / 90;
+                                }
+                                disp->setProjection(panelOrientation,
+                                        state.viewport, state.frame);
+                                orient = panelOrientation;
+                            }
+#endif
+#ifdef QCOM_B_FAMILY
+                            // Set the view frame of each display only of its
+                            // default orientation.
+                            if(orient == DisplayState::eOrientationDefault) {
+                                qdutils::setViewFrame(disp->getHwcDisplayId(),
+                                    state.frame.left, state.frame.top,
+                                    state.frame.right, state.frame.bottom);
+                            }
+#else
                             disp->setProjection(state.orientation,
-                                    state.viewport, state.frame);
+                                state.viewport, state.frame);
+#endif
                         }
                     }
                 }
@@ -2707,13 +2751,18 @@ void SurfaceFlinger::dumpStatsLocked(const Vector<String16>& args, size_t& index
     if (name.isEmpty()) {
         mAnimFrameTracker.dump(result);
     } else {
+        bool found = false;
         const LayerVector& currentLayers = mCurrentState.layersSortedByZ;
         const size_t count = currentLayers.size();
         for (size_t i=0 ; i<count ; i++) {
             const sp<Layer>& layer(currentLayers[i]);
             if (name == layer->getName()) {
+                found = true;
                 layer->dumpStats(result);
             }
+        }
+        if (!found && !strncmp(name.string(), "SurfaceView", 11)) {
+            lastSurfaceViewLayer->dumpStats(result);
         }
     }
 }
