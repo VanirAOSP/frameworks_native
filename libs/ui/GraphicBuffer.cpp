@@ -53,19 +53,35 @@ GraphicBuffer::GraphicBuffer()
     handle = NULL;
 }
 
-GraphicBuffer::GraphicBuffer(uint32_t w, uint32_t h, 
+GraphicBuffer::GraphicBuffer(uint32_t w, uint32_t h,
         PixelFormat reqFormat, uint32_t reqUsage)
     : BASE(), mOwner(ownData), mBufferMapper(GraphicBufferMapper::get()),
       mInitCheck(NO_ERROR), mId(getUniqueId())
 {
-    width  = 
-    height = 
-    stride = 
-    format = 
+    width  =
+    height =
+    stride =
+    format =
     usage  = 0;
     handle = NULL;
     mInitCheck = initSize(w, h, reqFormat, reqUsage);
 }
+
+#ifdef QCOM_BSP
+GraphicBuffer::GraphicBuffer(uint32_t w, uint32_t h,
+        PixelFormat reqFormat, uint32_t reqUsage, uint32_t bufferSize)
+    : BASE(), mOwner(ownData), mBufferMapper(GraphicBufferMapper::get()),
+      mInitCheck(NO_ERROR)
+{
+    width  =
+    height =
+    stride =
+    format =
+    usage  = 0;
+    handle = NULL;
+    mInitCheck = initSize(w, h, reqFormat, reqUsage, bufferSize);
+}
+#endif
 
 GraphicBuffer::GraphicBuffer(uint32_t w, uint32_t h,
         PixelFormat inFormat, uint32_t inUsage,
@@ -162,6 +178,23 @@ status_t GraphicBuffer::initSize(uint32_t w, uint32_t h, PixelFormat format,
     return err;
 }
 
+#ifdef QCOM_BSP
+status_t GraphicBuffer::initSize(uint32_t w, uint32_t h, PixelFormat format,
+                                 uint32_t reqUsage, uint32_t bufferSize)
+{
+    GraphicBufferAllocator& allocator = GraphicBufferAllocator::get();
+    status_t err = allocator.alloc(w, h, format,
+                                   reqUsage, &handle, &stride, bufferSize);
+    if (err == NO_ERROR) {
+        this->width  = w;
+        this->height = h;
+        this->format = format;
+        this->usage  = reqUsage;
+    }
+    return err;
+}
+#endif
+
 status_t GraphicBuffer::lock(uint32_t usage, void** vaddr)
 {
     const Rect lockBounds(width, height);
@@ -171,10 +204,10 @@ status_t GraphicBuffer::lock(uint32_t usage, void** vaddr)
 
 status_t GraphicBuffer::lock(uint32_t usage, const Rect& rect, void** vaddr)
 {
-    if (rect.left < 0 || rect.right  > this->width || 
+    if (rect.left < 0 || rect.right  > this->width ||
         rect.top  < 0 || rect.bottom > this->height) {
         ALOGE("locking pixels (%d,%d,%d,%d) outside of buffer (w=%d, h=%d)",
-                rect.left, rect.top, rect.right, rect.bottom, 
+                rect.left, rect.top, rect.right, rect.bottom,
                 this->width, this->height);
         return BAD_VALUE;
     }
