@@ -1235,6 +1235,7 @@ protected:
             DEVICE_TYPE_TOUCH_SCREEN,
             DEVICE_TYPE_TOUCH_PAD,
             DEVICE_TYPE_TOUCH_NAVIGATION,
+            DEVICE_TYPE_GESTURE_SENSOR,
             DEVICE_TYPE_POINTER,
         };
 
@@ -1368,11 +1369,6 @@ protected:
     sp<PointerControllerInterface> mPointerController;
 
     Vector<VirtualKey> mVirtualKeys;
-
-    // true if we support external hovering cursor control
-    bool mHasExternalHoveringCursorControl;
-    // visibility state of hovering cursor (true=visible)
-    bool mExternalHoveringCursorVisible;
 
     virtual void configureParameters();
     virtual void dumpParameters(String8& dump);
