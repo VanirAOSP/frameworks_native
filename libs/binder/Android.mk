@@ -48,6 +48,23 @@ endif
 
 LOCAL_PATH:= $(call my-dir)
 
+# Scale the vm binder size limit.  Legacy devices can unset a size increase by
+# setting TARGET_ARCH_LOWMEM := true.  BONE_STOCK respects the AOSP default value. Any
+# device may set SCALE_VM_BINDER_MB := for a specific value. If the value is unset the
+# default value is now 2 + 4k which doubles the AOSP-stock 1 MB + 4k value. The backing
+# store in the kernel requires a guard page of 4k to prevent memory
+# fragmentation so exact increments of 1MB are not acceptable.
+ifeq ($(BONE_STOCK),true)
+  local_vm_binder_flags := -DSCALE_VM_BINDER_MB=1
+else
+  ifeq ($(TARGET_ARCH_LOWMEM),true)
+    local_vm_binder_flags := -DSCALE_VM_BINDER_MB=1
+  else
+    SCALE_VM_BINDER_MB ?= 2
+    local_vm_binder_flags := -DSCALE_VM_BINDER_MB=$(SCALE_VM_BINDER_MB)
+  endif
+endif
+
 include $(CLEAR_VARS)
 
 ifeq ($(BOARD_NEEDS_MEMORYHEAPION),true)
@@ -60,6 +77,8 @@ PLATFORM_DIR := $(TARGET_BOARD_PLATFORM)
 endif
 LOCAL_C_INCLUDES += hardware/samsung_slsi/$(PLATFORM_DIR)/include
 endif
+
+LOCAL_CFLAGS += $(local_vm_binder_flags)
 
 LOCAL_MODULE := libbinder
 LOCAL_SHARED_LIBRARIES += liblog libcutils libutils
@@ -91,6 +110,8 @@ endif
 LOCAL_C_INCLUDES += hardware/samsung_slsi/$(PLATFORM_DIR)/include
 endif
 
+LOCAL_CFLAGS += $(local_vm_binder_flags)
+
 LOCAL_MODULE := libbinder
 LOCAL_STATIC_LIBRARIES += libutils
 LOCAL_SRC_FILES := $(sources)
@@ -106,4 +127,8 @@ LOCAL_CFLAGS += -DBINDER_IPC_32BIT=1
 endif
 endif
 LOCAL_CFLAGS += -Werror
+
+# unset local variables
+local_vm_binder_flags :=
+
 include $(BUILD_STATIC_LIBRARY)
