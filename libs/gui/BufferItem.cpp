@@ -39,6 +39,8 @@ BufferItem::BufferItem() :
 #endif
 }
 
+BufferItem::~BufferItem() {}
+
 BufferItem::operator IGraphicBufferConsumer::BufferItem() const {
     IGraphicBufferConsumer::BufferItem bufferItem;
     bufferItem.mGraphicBuffer = mGraphicBuffer;
