@@ -3822,7 +3822,6 @@ status_t SurfaceFlinger::captureScreenImplLocked(
                             sync = EGL_NO_SYNC_KHR;
                         }
                         if (sync != EGL_NO_SYNC_KHR) {
-                            getRenderEngine().flush();
                             EGLint result = eglClientWaitSyncKHR(mEGLDisplay, sync,
                                     EGL_SYNC_FLUSH_COMMANDS_BIT_KHR, 2000000000 /*2 sec*/);
                             EGLint eglErr = eglGetError();
