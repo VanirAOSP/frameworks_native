@@ -450,6 +450,9 @@ FloatRect Layer::computeCrop(const sp<const DisplayDevice>& hw) const {
 Transform Layer::computeBufferTransform(const sp<const DisplayDevice>& hw) const
 {
     const State& s(getDrawingState());
+
+    // apply the layer's transform, followed by the display's global transform
+    // here we're guaranteed that the layer's transform preserves rects
     Region activeTransparentRegion(s.activeTransparentRegion);
     if (!s.active.crop.isEmpty()) {
         Rect activeCrop(s.active.crop);
@@ -473,6 +476,7 @@ Transform Layer::computeBufferTransform(const sp<const DisplayDevice>& hw) const
                 s.active.w, activeCrop.bottom));
     }
     Rect frame(s.transform.transform(computeBounds(activeTransparentRegion)));
+    frame.intersect(hw->getViewport(), &frame);
     const Transform& tr(hw->getTransform());
     /*
      * Transformations are applied in this order:

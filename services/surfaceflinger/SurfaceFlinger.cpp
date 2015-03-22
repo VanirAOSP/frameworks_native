@@ -3844,14 +3844,6 @@ status_t SurfaceFlinger::captureScreenImplLocked(
                                 buf->unlock();
                             }
                         }
-                        if (useReadPixels) {
-                            sp<GraphicBuffer> buf = static_cast<GraphicBuffer*>(buffer);
-                            void* vaddr;
-                            if (buf->lock(GRALLOC_USAGE_SW_WRITE_OFTEN, &vaddr) == NO_ERROR) {
-                                getRenderEngine().readPixels(0, 0, buffer->stride, reqHeight, (uint32_t *)vaddr);
-                                buf->unlock();
-                            }
-                        }
                         if (DEBUG_SCREENSHOTS) {
                             uint32_t* pixels = new uint32_t[reqWidth*reqHeight];
                             getRenderEngine().readPixels(0, 0, reqWidth, reqHeight, pixels);
