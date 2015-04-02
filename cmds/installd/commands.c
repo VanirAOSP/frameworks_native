@@ -893,11 +893,10 @@ int dexopt(const char *apk_path, uid_t uid, bool is_public,
            bool vm_safe_mode, bool is_patchoat)
 {
     struct utimbuf ut;
-    struct stat input_stat, dex_stat;
+    struct stat input_stat;
     char out_path[PKG_PATH_MAX];
     char persist_sys_dalvik_vm_lib[PROPERTY_VALUE_MAX];
     char swap_file_name[PKG_PATH_MAX];
-    char *end;
     const char *input_file;
     char in_odex_path[PKG_PATH_MAX];
     int res, input_fd=-1, out_fd=-1, swap_fd=-1;
