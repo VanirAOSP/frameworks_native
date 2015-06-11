@@ -278,6 +278,10 @@ status_t BufferQueueProducer::dequeueBuffer(int *outSlot,
             format = mCore->mDefaultBufferFormat;
         }
 
+        if (format == 0x7FA00000) {
+            format = HAL_PIXEL_FORMAT_YCBCR42XMBN;
+        }
+
         // Enable the usage bits the consumer requested
         usage |= mCore->mConsumerUsageBits;
 

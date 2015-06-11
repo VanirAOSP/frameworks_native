@@ -93,12 +93,16 @@ FramebufferNativeWindow::FramebufferNativeWindow()
         mUpdateOnDemand = (fbDev->setUpdateRect != 0);
         
         // initialize the buffer FIFO
+#ifndef STE_HARDWARE
         if(fbDev->numFramebuffers >= MIN_NUM_FRAME_BUFFERS &&
            fbDev->numFramebuffers <= MAX_NUM_FRAME_BUFFERS){
             mNumBuffers = fbDev->numFramebuffers;
         } else {
             mNumBuffers = MIN_NUM_FRAME_BUFFERS;
         }
+#else
+        mNumBuffers = MAX_NUM_FRAME_BUFFERS;
+#endif
         mNumFreeBuffers = mNumBuffers;
         mBufferHead = mNumBuffers-1;
 
