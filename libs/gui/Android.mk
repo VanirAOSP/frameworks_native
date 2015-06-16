@@ -46,6 +46,10 @@ LOCAL_SHARED_LIBRARIES := \
 	libutils \
 	liblog
 
+ifeq ($(BOARD_USES_STE_HARDWARE),true)
+	LOCAL_SHARED_LIBRARIES := libhardware
+endif
+
 # Executed only on QCOM BSPs
 ifeq ($(TARGET_USES_QCOM_BSP),true)
     LOCAL_C_INCLUDES += $(call project-path-for,qcom-display)/libgralloc
