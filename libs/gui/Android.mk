@@ -47,16 +47,7 @@ LOCAL_SHARED_LIBRARIES := \
 	liblog
 
 ifeq ($(BOARD_USES_STE_HARDWARE),true)
-	LOCAL_SHARED_LIBRARIES := \
-	libbinder \
-	libcutils \
-	libEGL \
-	libGLESv2 \
-	libsync \
-	libui \
-	libutils \
-	liblog \
-        libhardware
+	LOCAL_SHARED_LIBRARIES := libhardware
 endif
 
 # Executed only on QCOM BSPs
