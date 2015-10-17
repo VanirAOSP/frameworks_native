@@ -83,7 +83,6 @@ RenderEngine* RenderEngine::create(EGLDisplay display, int hwcFormat) {
             EGL_CONTEXT_CLIENT_VERSION, contextClientVersion,      // MUST be first
 #ifdef EGL_IMG_context_priority
 #ifdef HAS_CONTEXT_PRIORITY
-#warning "using EGL_IMG_context_priority"
             EGL_CONTEXT_PRIORITY_LEVEL_IMG, EGL_CONTEXT_PRIORITY_HIGH_IMG,
 #endif
 #endif
@@ -262,9 +261,11 @@ void RenderEngine::dump(String8& result) {
 // ---------------------------------------------------------------------------
 
 RenderEngine::BindImageAsFramebuffer::BindImageAsFramebuffer(
-        RenderEngine& engine, EGLImageKHR image) : mEngine(engine)
+        RenderEngine& engine, EGLImageKHR image, bool useReadPixels,
+        int reqWidth, int reqHeight) : mEngine(engine), mUseReadPixels(useReadPixels)
 {
-    mEngine.bindImageAsFramebuffer(image, &mTexName, &mFbName, &mStatus);
+    mEngine.bindImageAsFramebuffer(image, &mTexName, &mFbName, &mStatus,
+            useReadPixels, reqWidth, reqHeight);
 
     ALOGE_IF(mStatus != GL_FRAMEBUFFER_COMPLETE_OES,
             "glCheckFramebufferStatusOES error %d", mStatus);
@@ -272,7 +273,7 @@ RenderEngine::BindImageAsFramebuffer::BindImageAsFramebuffer(
 
 RenderEngine::BindImageAsFramebuffer::~BindImageAsFramebuffer() {
     // back to main framebuffer
-    mEngine.unbindFramebuffer(mTexName, mFbName);
+    mEngine.unbindFramebuffer(mTexName, mFbName, mUseReadPixels);
 }
 
 status_t RenderEngine::BindImageAsFramebuffer::getStatus() const {
