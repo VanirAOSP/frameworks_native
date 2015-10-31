@@ -1744,8 +1744,7 @@ static void run_aapt(const char *source_apk, const char *internal_path,
 int aapt(const char *source_apk, const char *internal_path, const char *out_restable, uid_t uid,
          int pkgId, int min_sdk_version, const char *common_res_path)
 {
-    ALOGD("aapt source_apk=%s internal_path=%s out_restable=%s uid=%d, pkgId=%d, \
-            min_sdk_version=%d, common_res_path=%s",
+    ALOGD("aapt source_apk=%s internal_path=%s out_restable=%s uid=%d, pkgId=%d,min_sdk_version=%d, common_res_path=%s",
             source_apk, internal_path, out_restable, uid, pkgId, min_sdk_version, common_res_path);
     static const int PARENT_READ_PIPE = 0;
     static const int CHILD_WRITE_PIPE = 1;
@@ -1754,34 +1753,36 @@ int aapt(const char *source_apk, const char *internal_path, const char *out_rest
     char restable_path[PATH_MAX];
     char resapk_path[PATH_MAX];
 
+    // create pipes for redirecting STDERR to a buffer that can be displayed in logcat
     int pipefd[2];
-    pid_t pid = fork();
-
-    // get file descriptor for resources.arsc
-    snprintf(restable_path, PATH_MAX, "%s/resources.arsc", out_restable);
-    unlink(restable_path);
-
-    // get file descriptor for resources.apk
-    snprintf(resapk_path, PATH_MAX, "%s/resources.apk", out_restable);
-    unlink(resapk_path);
-    resapk_fd = open(resapk_path, O_RDWR | O_CREAT | O_EXCL, 0644);
-    if (resapk_fd < 0) {
-        ALOGE("aapt cannot open '%s' for output: %s\n", resapk_path, strerror(errno));
-        goto fail;
-    }
-    if (fchown(resapk_fd, AID_SYSTEM, uid) < 0) {
-        ALOGE("aapt cannot chown '%s'\n", resapk_path);
-        goto fail;
-    }
-    if (fchmod(resapk_fd, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) < 0) {
-        ALOGE("aapt cannot chmod '%s'\n", resapk_path);
-        goto fail;
-    }
-
     if (pipe(pipefd) != 0) {
         pipefd[0] = pipefd[1] = -1;
     }
+
+    pid_t pid = fork();
+
     if (pid == 0) {
+        // get file descriptor for resources.arsc
+        snprintf(restable_path, PATH_MAX, "%s/resources.arsc", out_restable);
+        unlink(restable_path);
+
+        // get file descriptor for resources.apk
+        snprintf(resapk_path, PATH_MAX, "%s/resources.apk", out_restable);
+        unlink(resapk_path);
+        resapk_fd = open(resapk_path, O_RDWR | O_CREAT | O_EXCL, 0644);
+        if (resapk_fd < 0) {
+            ALOGE("aapt cannot open '%s' for output: %s\n", resapk_path, strerror(errno));
+            goto fail;
+        }
+        if (fchown(resapk_fd, AID_SYSTEM, uid) < 0) {
+            ALOGE("aapt cannot chown '%s'\n", resapk_path);
+            goto fail;
+        }
+        if (fchmod(resapk_fd, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) < 0) {
+            ALOGE("aapt cannot chmod '%s'\n", resapk_path);
+            goto fail;
+        }
+
         /* child -- drop privileges before continuing */
         if (setgid(uid) != 0) {
             ALOGE("setgid(%d) failed during aapt\n", uid);
@@ -1806,6 +1807,7 @@ int aapt(const char *source_apk, const char *internal_path, const char *out_rest
 
         run_aapt(source_apk, internal_path, resapk_fd, pkgId, min_sdk_version, common_res_path);
 
+        close(resapk_fd);
         if (pipefd[CHILD_WRITE_PIPE] > 0) {
             close(pipefd[CHILD_WRITE_PIPE]);
         }
@@ -1844,7 +1846,6 @@ int aapt(const char *source_apk, const char *internal_path, const char *out_rest
         }
     }
 
-    close(resapk_fd);
     return 0;
 fail:
     if (resapk_fd >= 0) {
