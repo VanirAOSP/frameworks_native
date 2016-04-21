@@ -359,6 +359,8 @@ status_t SensorService::dump(int fd, const Vector<String16>& args)
                     result.appendFormat("non-wakeUp | ");
                 }
 
+                result.appendFormat("%.4f mA | ", s.getPowerUsage());
+
                 int bufIndex = mLastEventSeen.indexOfKey(s.getHandle());
                 if (bufIndex >= 0) {
                     const CircularBuffer* buf = mLastEventSeen.valueAt(bufIndex);
@@ -1118,7 +1120,7 @@ bool SensorService::canAccessSensor(const Sensor& sensor, const char* operation,
         AppOpsManager appOps;
         if (appOps.noteOp(opCode, IPCThreadState::self()->getCallingUid(), opPackageName)
                         != AppOpsManager::MODE_ALLOWED) {
-            ALOGE("%s a sensor (%s) without enabled required app op: %D",
+            ALOGE("%s a sensor (%s) without enabled required app op: %d",
                     operation, sensor.getName().string(), opCode);
             return false;
         }
