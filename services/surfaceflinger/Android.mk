@@ -120,18 +120,16 @@ ifeq ($(TARGET_USES_QCOM_BSP), true)
     LOCAL_C_INCLUDES += $(call project-path-for,qcom-display)/libgralloc
     LOCAL_C_INCLUDES += $(call project-path-for,qcom-display)/libqdutils
     LOCAL_SHARED_LIBRARIES += libqdutils
+    LOCAL_SHARED_LIBRARIES += libqdMetaData
     LOCAL_CFLAGS += -DQTI_BSP
+    ifeq ($(call is-board-platform-in-list,msm8996),true)
+        LOCAL_CFLAGS += -DSDM_TARGET
+    endif
     LOCAL_SRC_FILES += \
         ExSurfaceFlinger/ExLayer.cpp \
         ExSurfaceFlinger/ExSurfaceFlinger.cpp \
         ExSurfaceFlinger/ExVirtualDisplaySurface.cpp \
         ExSurfaceFlinger/ExHWComposer.cpp
-endif
-
-ifeq ($(TARGET_HAVE_UI_BLUR),true)
-    LOCAL_C_INCLUDES += $(TARGET_OUT_HEADERS)/ui
-    LOCAL_SHARED_LIBRARIES += libuiblur
-    LOCAL_CFLAGS += -DUI_BLUR
 endif
 
 LOCAL_MODULE := libsurfaceflinger
