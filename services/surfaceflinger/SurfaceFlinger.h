@@ -261,6 +261,7 @@ private:
                      bool& /*bIgnoreLayers*/,
                      int& /*indexLOI*/) { }
 
+#ifndef USE_HWC2
     virtual bool updateLayerVisibleNonTransparentRegion(
                      const int& dpy, const sp<Layer>& layer,
                      bool& bIgnoreLayers, int& indexLOI,
@@ -283,10 +284,12 @@ private:
                      const int32_t& /*id*/) { }
 
     virtual void updateVisibleRegionsDirty() { }
+
     virtual void  drawWormHoleIfRequired(HWComposer::LayerListIterator &cur,
         const HWComposer::LayerListIterator &end,
         const sp<const DisplayDevice>& hw,
         const Region& region);
+#endif
     virtual bool isS3DLayerPresent(const sp<const DisplayDevice>& /*hw*/)
         { return false; };
     /* ------------------------------------------------------------------------
@@ -363,7 +366,7 @@ private:
     status_t onLayerDestroyed(const wp<Layer>& layer);
 
     // remove a layer from SurfaceFlinger immediately
-    status_t removeLayer(const sp<Layer>& layer);
+    status_t removeLayer(const wp<Layer>& layer);
 
     // add a layer to SurfaceFlinger
     status_t addClientLayer(const sp<Client>& client,

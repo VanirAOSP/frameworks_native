@@ -132,7 +132,7 @@ public:
 
         // If set, defers this state update until the Layer identified by handle
         // receives a frame with the given frameNumber
-        sp<IBinder> handle;
+        wp<IBinder> handle;
         uint64_t frameNumber;
 
         // the transparentRegion hint is a bit special, it's latched only
@@ -359,6 +359,7 @@ public:
     /* ------------------------------------------------------------------------
      * Extensions
      */
+#ifndef USE_HWC2
     virtual bool isExtOnly() const { return false; }
     virtual bool isIntOnly() const { return false; }
     virtual bool isSecureDisplay() const { return false; }
@@ -368,6 +369,7 @@ public:
                              const State& /*state*/) { }
     virtual void setAcquiredFenceIfBlit(int& /*fenceFd */,
                        HWComposer::HWCLayerInterface& /*layer */) { }
+#endif
     virtual bool canAllowGPUForProtected() const { return false; }
     virtual void handleOpenGLDraw(const sp<const DisplayDevice>& /*hw*/,
             Mesh& mesh) const;
