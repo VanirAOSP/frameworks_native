@@ -163,7 +163,6 @@ SurfaceFlinger::SurfaceFlinger()
         mPrimaryHWVsyncEnabled(false),
         mHWVsyncAvailable(false),
         mHasColorMatrix(false),
-        mHasSecondaryColorMatrix(false),
         mHasPoweredOff(false),
         mFrameBuckets(),
         mTotalTime(0),
@@ -1279,7 +1278,7 @@ void SurfaceFlinger::rebuildLayerStacks() {
             const Transform& tr(displayDevice->getTransform());
             const Rect bounds(displayDevice->getBounds());
             if (displayDevice->isDisplayOn()) {
-                SurfaceFlinger::computeVisibleRegions(displayDevice->getHwcDisplayId(), layers,
+                SurfaceFlinger::computeVisibleRegions(dpy, layers,
                         displayDevice->getLayerStack(), dirtyRegion,
                         opaqueRegion);
 
@@ -1839,7 +1838,7 @@ void SurfaceFlinger::commitTransaction()
     mTransactionCV.broadcast();
 }
 
-void SurfaceFlinger::computeVisibleRegions(size_t /* dpy */,
+void SurfaceFlinger::computeVisibleRegions(size_t /*dpy*/,
         const LayerVector& currentLayers, uint32_t layerStack,
         Region& outDirtyRegion, Region& outOpaqueRegion)
 {
